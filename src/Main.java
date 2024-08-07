@@ -1,6 +1,6 @@
 public class Main {
     public static void main(String[] args) {
-        TaskManager taskManager = new TaskManager();
+        TaskManager taskManager = Managers.getDefault();
 
         Task task1 = taskManager.createTask("Task 1", "Description 1");
         Task task2 = taskManager.createTask("Task 2", "Description 2");
@@ -17,19 +17,26 @@ public class Main {
         System.out.println("All Subtasks: " + taskManager.getSubtasks());
 
         task1.setStatus(TaskStatus.DONE);
+        taskManager.updateTask(task1);
         subtask1.setStatus(TaskStatus.DONE);
+        taskManager.updateSubtask(subtask1);
         subtask2.setStatus(TaskStatus.DONE);
+        taskManager.updateSubtask(subtask2);
         subtask3.setStatus(TaskStatus.IN_PROGRESS);
+        taskManager.updateSubtask(subtask3);
 
         System.out.println("Updated Tasks: " + taskManager.getTasks());
         System.out.println("Updated Epics: " + taskManager.getEpics());
         System.out.println("Updated Subtasks: " + taskManager.getSubtasks());
 
+        System.out.println("History of viewed tasks: " + taskManager.getHistory());
+
         taskManager.deleteTaskById(task1.getId());
-        taskManager.deleteTaskById(epic1.getId());
+        taskManager.deleteEpicById(epic1.getId());
 
         System.out.println("After Deletion - All Tasks: " + taskManager.getTasks());
         System.out.println("After Deletion - All Epics: " + taskManager.getEpics());
         System.out.println("After Deletion - All Subtasks: " + taskManager.getSubtasks());
+        System.out.println("History of viewed tasks after deletion: " + taskManager.getHistory());
     }
 }
