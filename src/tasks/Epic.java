@@ -1,34 +1,37 @@
+package tasks;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 public class Epic extends Task {
     private final List<Subtask> subtasks;
+    private TaskStatus status;
 
     public Epic(int id, String name, String description) {
         super(id, name, description);
         this.subtasks = new ArrayList<>();
+        this.status = TaskStatus.NEW;
     }
 
     public List<Subtask> getSubtasks() {
-
         return subtasks;
     }
 
     public void addSubtask(Subtask subtask) {
-
         subtasks.add(subtask);
+        updateStatus();
     }
 
     public void removeSubtask(Subtask subtask) {
-
         subtasks.remove(subtask);
+        updateStatus();
     }
 
-    @Override
-    public TaskStatus getStatus() {
+    private void updateStatus() {
         if (subtasks.isEmpty()) {
-            return TaskStatus.NEW;
+            status = TaskStatus.NEW;
+            return;
         }
 
         boolean allDone = true;
@@ -44,12 +47,17 @@ public class Epic extends Task {
         }
 
         if (allDone) {
-            return TaskStatus.DONE;
+            status = TaskStatus.DONE;
+        } else if (allNew) {
+            status = TaskStatus.NEW;
+        } else {
+            status = TaskStatus.IN_PROGRESS;
         }
-        if (allNew) {
-            return TaskStatus.NEW;
-        }
-        return TaskStatus.IN_PROGRESS;
+    }
+
+    @Override
+    public TaskStatus getStatus() {
+        return status;
     }
 
     @Override
@@ -58,12 +66,12 @@ public class Epic extends Task {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         Epic epic = (Epic) o;
-        return Objects.equals(subtasks, epic.subtasks);
+        return Objects.equals(subtasks, epic.subtasks) && status == epic.status;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), subtasks);
+        return Objects.hash(super.hashCode(), subtasks, status);
     }
 
     @Override
@@ -72,7 +80,7 @@ public class Epic extends Task {
                 "id=" + getId() +
                 ", name='" + getName() + '\'' +
                 ", description='" + getDescription() + '\'' +
-                ", status=" + getStatus() +
+                ", status=" + status +
                 ", subtasks=" + subtasks +
                 '}';
     }

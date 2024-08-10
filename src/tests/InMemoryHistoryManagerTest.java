@@ -1,5 +1,10 @@
+package tests;
+
+import history.HistoryManager;
+import managers.Managers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tasks.Task;
 
 import java.util.List;
 
@@ -13,6 +18,7 @@ class InMemoryHistoryManagerTest {
     public void setUp() {
         historyManager = Managers.getDefaultHistory();
     }
+
     @Test
     void add() {
         Task task = new Task(1, "Task 1", "Description 1");
@@ -30,7 +36,27 @@ class InMemoryHistoryManagerTest {
         historyManager.add(task2);
         List<Task> history = historyManager.getHistory();
         assertEquals(2, history.size());
-        assertEquals(task1,history.get(0));
-        assertEquals(task2,history.get(1));
+        assertEquals(task1, history.get(0));
+        assertEquals(task2, history.get(1));
     }
+
+    @Test
+    void taskStatePreserved() {
+        Task task = new Task(1, "Task 1", "Description 1");
+        historyManager.add(task);
+
+        Task updatedTask = new Task(1, "Updated Task 1", "Updated Description 1");
+        historyManager.add(updatedTask);
+
+        List<Task> history = historyManager.getHistory();
+        assertEquals(2, history.size());
+
+        Task retrievedTask = history.get(0);
+
+        assertEquals("Task 1", retrievedTask.getName());
+        assertEquals("Description 1", retrievedTask.getDescription());
+    }
+
+
+
 }

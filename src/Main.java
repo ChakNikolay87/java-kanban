@@ -1,16 +1,34 @@
+import managers.Managers;
+import managers.TaskManager;
+import tasks.Epic;
+import tasks.Subtask;
+import tasks.Task;
+import tasks.TaskStatus;
+
 public class Main {
     public static void main(String[] args) {
         TaskManager taskManager = Managers.getDefault();
 
-        Task task1 = taskManager.createTask("Task 1", "Description 1");
-        Task task2 = taskManager.createTask("Task 2", "Description 2");
+        Task task1 = new Task(0, "Task 1", "Description 1");
+        taskManager.createTask(task1);
 
-        Epic epic1 = taskManager.createEpic("Epic 1", "Description 1");
-        Subtask subtask1 = taskManager.createSubtask("Subtask 1", "Description 1", epic1.getId());
-        Subtask subtask2 = taskManager.createSubtask("Subtask 2", "Description 2", epic1.getId());
+        Task task2 = new Task(0, "Task 2", "Description 2");
+        taskManager.createTask(task2);
 
-        Epic epic2 = taskManager.createEpic("Epic 2", "Description 2");
-        Subtask subtask3 = taskManager.createSubtask("Subtask 3", "Description 3", epic2.getId());
+        Epic epic1 = new Epic(0, "Epic 1", "Description 1");
+        taskManager.createEpic(epic1);
+
+        Subtask subtask1 = new Subtask(0, "Subtask 1", "Description 1", epic1.getId());
+        taskManager.createSubtask(subtask1);
+
+        Subtask subtask2 = new Subtask(0, "Subtask 2", "Description 2", epic1.getId());
+        taskManager.createSubtask(subtask2);
+
+        Epic epic2 = new Epic(0, "Epic 2", "Description 2");
+        taskManager.createEpic(epic2);
+
+        Subtask subtask3 = new Subtask(0, "Subtask 3", "Description 3", epic2.getId());
+        taskManager.createSubtask(subtask3);
 
         System.out.println("All Tasks: " + taskManager.getTasks());
         System.out.println("All Epics: " + taskManager.getEpics());
@@ -18,10 +36,13 @@ public class Main {
 
         task1.setStatus(TaskStatus.DONE);
         taskManager.updateTask(task1);
+
         subtask1.setStatus(TaskStatus.DONE);
         taskManager.updateSubtask(subtask1);
+
         subtask2.setStatus(TaskStatus.DONE);
         taskManager.updateSubtask(subtask2);
+
         subtask3.setStatus(TaskStatus.IN_PROGRESS);
         taskManager.updateSubtask(subtask3);
 
