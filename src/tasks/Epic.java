@@ -6,12 +6,11 @@ import java.util.Objects;
 
 public class Epic extends Task {
     private final List<Subtask> subtasks;
-    private TaskStatus status;
 
     public Epic(int id, String name, String description) {
         super(id, name, description);
         this.subtasks = new ArrayList<>();
-        this.status = TaskStatus.NEW;
+        updateStatus();
     }
 
     public List<Subtask> getSubtasks() {
@@ -28,9 +27,9 @@ public class Epic extends Task {
         updateStatus();
     }
 
-    private void updateStatus() {
+    public void updateStatus() {
         if (subtasks.isEmpty()) {
-            status = TaskStatus.NEW;
+            setStatus(TaskStatus.NEW);
             return;
         }
 
@@ -47,17 +46,12 @@ public class Epic extends Task {
         }
 
         if (allDone) {
-            status = TaskStatus.DONE;
+            setStatus(TaskStatus.DONE);
         } else if (allNew) {
-            status = TaskStatus.NEW;
+            setStatus(TaskStatus.NEW);
         } else {
-            status = TaskStatus.IN_PROGRESS;
+            setStatus(TaskStatus.IN_PROGRESS);
         }
-    }
-
-    @Override
-    public TaskStatus getStatus() {
-        return status;
     }
 
     @Override
@@ -66,12 +60,12 @@ public class Epic extends Task {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         Epic epic = (Epic) o;
-        return Objects.equals(subtasks, epic.subtasks) && status == epic.status;
+        return Objects.equals(subtasks, epic.subtasks);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), subtasks, status);
+        return Objects.hash(super.hashCode(), subtasks);
     }
 
     @Override
@@ -80,7 +74,7 @@ public class Epic extends Task {
                 "id=" + getId() +
                 ", name='" + getName() + '\'' +
                 ", description='" + getDescription() + '\'' +
-                ", status=" + status +
+                ", status=" + getStatus() +
                 ", subtasks=" + subtasks +
                 '}';
     }

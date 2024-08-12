@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import tasks.Epic;
 import tasks.Subtask;
 import tasks.Task;
+import tasks.TaskStatus;
 
 import java.util.List;
 
@@ -100,7 +101,7 @@ class InMemoryTaskManagerTest {
     }
 
     @Test
-    void testGetTaskById() {
+    void GetTaskById() {
         Task task = new Task(0, "Task 1", "Description 1");
         taskManager.createTask(task);
         Task retrievedTask = taskManager.getTaskById(task.getId());
@@ -178,7 +179,7 @@ class InMemoryTaskManagerTest {
     }
 
     @Test
-    void testDeleteSubtaskById() {
+    void DeleteSubtaskById() {
         Epic epic = new Epic(0, "Epic 1", "Description 1");
         taskManager.createEpic(epic);
         Subtask subtask = new Subtask(0, "Subtask 1", "Description 1", epic.getId());
@@ -189,7 +190,46 @@ class InMemoryTaskManagerTest {
 
 
     @Test
-    void testGetSubtasksByEpicId() {
+    void DeleteAllTasks() {
+        Task task1 = new Task(1, "Task 1", "Description 1");
+        Task task2 = new Task(2, "Task 2", "Description 2");
+        taskManager.createTask(task1);
+        taskManager.createTask(task2);
+
+        taskManager.deleteAllTasks();
+
+        assertTrue(taskManager.getTasks().isEmpty(), "All tasks should be deleted.");
+    }
+
+    @Test
+    void DeleteAllEpics() {
+        Epic epic1 = new Epic(1, "Epic 1", "Description 1");
+        Subtask subtask1 = new Subtask(2, "Subtask 1", "Description 1", epic1.getId());
+        taskManager.createEpic(epic1);
+        taskManager.createSubtask(subtask1);
+
+        taskManager.deleteAllEpics();
+
+        assertTrue(taskManager.getEpics().isEmpty(), "All epics should be deleted.");
+        assertTrue(taskManager.getSubtasks().isEmpty(), "All subtasks should be deleted along with epics.");
+    }
+
+    @Test
+    void DeleteAllSubtasks() {
+        Epic epic1 = new Epic(1, "Epic 1", "Description 1");
+        Subtask subtask1 = new Subtask(2, "Subtask 1", "Description 1", epic1.getId());
+        taskManager.createEpic(epic1);
+        taskManager.createSubtask(subtask1);
+
+        taskManager.deleteAllSubtasks();
+
+        assertTrue(taskManager.getSubtasks().isEmpty(), "All subtasks should be deleted.");
+        assertEquals(TaskStatus.NEW, epic1.getStatus(), "Epic status should be NEW after deleting all subtasks.");
+    }
+
+
+    @Test
+    void GetSubtasksByEpicId() {
         Epic epic = new Epic(0, "Epic 1", "Description 1");
         taskManager.createEpic(epic);
         Subtask subtask = new Subtask(0, "Subtask 1", "Description 1", epic.getId());
@@ -199,7 +239,7 @@ class InMemoryTaskManagerTest {
     }
 
     @Test
-    void testGetHistory() {
+    void GetHistory() {
         Task task1 = new Task(0, "Task 1", "Description 1");
         taskManager.createTask(task1);
         Task task2 = new Task(0, "Task 2", "Description 2");
@@ -211,7 +251,7 @@ class InMemoryTaskManagerTest {
     }
 
     @Test
-    void testTaskEqualityById() {
+    void TaskEqualityById() {
         Task task1 = new Task(0, "Task 1", "Description 1");
         taskManager.createTask(task1);
         Task task2 = new Task(0, "Task 2", "Description 2");
@@ -222,7 +262,7 @@ class InMemoryTaskManagerTest {
     }
 
     @Test
-    void testEpicCannotAddItselfAsSubtask() {
+    void EpicCannotAddItselfAsSubtask() {
         Epic epic = new Epic(0, "Epic 1", "Description 1");
         taskManager.createEpic(epic);
 
