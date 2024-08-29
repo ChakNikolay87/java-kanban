@@ -102,7 +102,7 @@ class InMemoryTaskManagerTest {
     }
 
     @Test
-    void GetTaskById() {
+    void getTaskById() {
         Task task = new Task(0, "Task 1", "Description 1");
         taskManager.createTask(task);
         Task retrievedTask = taskManager.getTaskById(task.getId());
@@ -180,7 +180,7 @@ class InMemoryTaskManagerTest {
     }
 
     @Test
-    void DeleteSubtaskById() {
+    void deleteSubtaskById() {
         Epic epic = new Epic(0, "Epic 1", "Description 1");
         taskManager.createEpic(epic);
         Subtask subtask = new Subtask(0, "Subtask 1", "Description 1", epic.getId());
@@ -191,7 +191,7 @@ class InMemoryTaskManagerTest {
 
 
     @Test
-    void DeleteAllTasks() {
+    void deleteAllTasks() {
         Task task1 = new Task(1, "Task 1", "Description 1");
         Task task2 = new Task(2, "Task 2", "Description 2");
         taskManager.createTask(task1);
@@ -203,7 +203,7 @@ class InMemoryTaskManagerTest {
     }
 
     @Test
-    void DeleteAllEpics() {
+    void deleteAllEpics() {
         Epic epic1 = new Epic(1, "Epic 1", "Description 1");
         Subtask subtask1 = new Subtask(2, "Subtask 1", "Description 1", epic1.getId());
         taskManager.createEpic(epic1);
@@ -216,7 +216,7 @@ class InMemoryTaskManagerTest {
     }
 
     @Test
-    void DeleteAllSubtasks() {
+    void deleteAllSubtasks() {
         Epic epic1 = new Epic(1, "Epic 1", "Description 1");
         Subtask subtask1 = new Subtask(2, "Subtask 1", "Description 1", epic1.getId());
         taskManager.createEpic(epic1);
@@ -230,7 +230,7 @@ class InMemoryTaskManagerTest {
 
 
     @Test
-    void GetSubtasksByEpicId() {
+    void getSubtasksByEpicId() {
         Epic epic = new Epic(0, "Epic 1", "Description 1");
         taskManager.createEpic(epic);
         Subtask subtask = new Subtask(0, "Subtask 1", "Description 1", epic.getId());
@@ -240,7 +240,7 @@ class InMemoryTaskManagerTest {
     }
 
     @Test
-    void GetHistory() {
+    void getHistory() {
         Task task1 = new Task(0, "Task 1", "Description 1");
         taskManager.createTask(task1);
         Task task2 = new Task(0, "Task 2", "Description 2");
@@ -252,7 +252,7 @@ class InMemoryTaskManagerTest {
     }
 
     @Test
-    void TaskEqualityById() {
+    void taskEqualityById() {
         Task task1 = new Task(0, "Task 1", "Description 1");
         taskManager.createTask(task1);
         Task task2 = new Task(0, "Task 2", "Description 2");
@@ -263,7 +263,7 @@ class InMemoryTaskManagerTest {
     }
 
     @Test
-    void EpicCannotAddItselfAsSubtask() {
+    void epicCannotAddItselfAsSubtask() {
         Epic epic = new Epic(0, "Epic 1", "Description 1");
         taskManager.createEpic(epic);
 
