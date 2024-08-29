@@ -30,7 +30,7 @@ class InMemoryHistoryManagerTest {
     }
 
     @Test
-    void addTaskToHistoryShouldNotDuplicateTasks(){
+    void addTaskToHistoryShouldNotDuplicateTasks() {
         Task task = new Task(1, "Task Task", "Task Description");
 
         historyManager.add(task);
@@ -42,7 +42,7 @@ class InMemoryHistoryManagerTest {
     }
 
     @Test
-    void removeTaskFromHistoryShouldRemoveTaskFromHistory(){
+    void removeTaskFromHistoryShouldRemoveTaskFromHistory() {
         Task task1 = new Task(1, "Task Task", "Task Description 1");
         Task task2 = new Task(2, "Task Task", "Task Description 2");
 
@@ -57,7 +57,7 @@ class InMemoryHistoryManagerTest {
     }
 
     @Test
-    void removeTaskFromHistoryShouldNotRemoveNonExistentTask(){
+    void removeTaskFromHistoryShouldNotRemoveNonExistentTask() {
         Task task = new Task(1, "Task Task", "Task Description");
 
         historyManager.add(task);
@@ -75,7 +75,7 @@ class InMemoryHistoryManagerTest {
     }
 
     @Test
-    void addMultipleTasksToHistoryShouldMainCorrectOrder(){
+    void addMultipleTasksToHistoryShouldMainCorrectOrder() {
         Task task1 = new Task(1, "Test Task 1", "Task Description 1");
         Task task2 = new Task(2, "Test Task 2", "Task Description 2");
         Task task3 = new Task(3, "Test Task 3", "Task Description 3");
@@ -93,7 +93,7 @@ class InMemoryHistoryManagerTest {
 
 
     @Test
-    void addDuplicateTaskShouldReplaceEntry(){
+    void addDuplicateTaskShouldReplaceEntry() {
         Task task1 = new Task(1, "Test Task 1", "Task Description 1");
         Task task2 = new Task(2, "Test Task 2", "Task Description 2");
 
@@ -109,7 +109,7 @@ class InMemoryHistoryManagerTest {
 
 
     @Test
-    void removeAllTasksShouldReturnEmptyHistory(){
+    void removeAllTasksShouldReturnEmptyHistory() {
         Task task1 = new Task(1, "Test Task 1", "Task Description 1");
         Task task2 = new Task(2, "Test Task 2", "Task Description 2");
 
