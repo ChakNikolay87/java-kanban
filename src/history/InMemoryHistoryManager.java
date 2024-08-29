@@ -25,23 +25,21 @@ public class InMemoryHistoryManager implements HistoryManager {
 
 
 
-
     @Override
     public void add(Task task) {
-       remote(task.getId());
+        remove(task.getId());
 
-       Node newNode = new Node(task);
-       linkLast(newNode);
+        Node newNode = new Node(task);
+        linkLast(newNode);
 
-       nodeMap.put(task.getId(), newNode);
+        nodeMap.put(task.getId(), newNode);
     }
 
 
     @Override
-    public void remote(int id) {
-
+    public void remove(int id) {
         Node node = nodeMap.remove(id);
-        if (node != null){
+        if (node != null) {
             removeNode(node);
         }
     }
