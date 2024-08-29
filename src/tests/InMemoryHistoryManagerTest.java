@@ -16,12 +16,13 @@ class InMemoryHistoryManagerTest {
 
     @BeforeEach
     public void setUp() {
+
         historyManager = Managers.getDefaultHistory();
     }
 
     @Test
-    void add() {
-        Task task = new Task(1, "Task 1", "Description 1");
+    void addTaskToHistoryShouldAddTaskToHistory() {
+        Task task = new Task(1, "Task Task", "Task Description");
         historyManager.add(task);
         List<Task> history = historyManager.getHistory();
         assertEquals(1, history.size());
@@ -29,34 +30,97 @@ class InMemoryHistoryManagerTest {
     }
 
     @Test
-    void getHistory() {
-        Task task1 = new Task(1, "Task 1", "Description 1");
-        Task task2 = new Task(2, "Task 2", "Description 2");
-        historyManager.add(task1);
-        historyManager.add(task2);
+    void addTaskToHistoryShouldNotDuplicateTasks(){
+        Task task = new Task(1, "Task Task", "Task Description");
+
+        historyManager.add(task);
+        historyManager.add(task);
+
         List<Task> history = historyManager.getHistory();
-        assertEquals(2, history.size());
-        assertEquals(task1, history.get(0));
-        assertEquals(task2, history.get(1));
+        assertEquals(1, history.size());
+        assertEquals(task, history.get(0));
     }
 
     @Test
-    void taskStatePreserved() {
-        Task task = new Task(1, "Task 1", "Description 1");
-        historyManager.add(task);
+    void removeTaskFromHistoryShouldRemoveTaskFromHistory(){
+        Task task1 = new Task(1, "Task Task", "Task Description 1");
+        Task task2 = new Task(2, "Task Task", "Task Description 2");
 
-        Task updatedTask = new Task(1, "Updated Task 1", "Updated Description 1");
-        historyManager.add(updatedTask);
+        historyManager.add(task1);
+        historyManager.add(task2);
+
+        historyManager.remote(task1.getId());
 
         List<Task> history = historyManager.getHistory();
-        assertEquals(2, history.size());
+        assertEquals(1, history.size());
+        assertEquals(task2, history.get(0));
+    }
 
-        Task retrievedTask = history.get(0);
+    @Test
+    void removeTaskFromHistoryShouldNotRemoveNonExistentTask(){
+        Task task = new Task(1, "Task Task", "Task Description");
 
-        assertEquals("Task 1", retrievedTask.getName());
-        assertEquals("Description 1", retrievedTask.getDescription());
+        historyManager.add(task);
+        historyManager.remote(2);
+
+        List<Task> history = historyManager.getHistory();
+        assertEquals(1, history.size());
+        assertEquals(task, history.get(0));
+    }
+
+    @Test
+    void getHistory_ShouldReturnEmptyList_WhenNoTasksAdded() {
+        List<Task> history = historyManager.getHistory();
+        assertTrue(history.isEmpty());
+    }
+
+    @Test
+    void addMultipleTasksToHistoryShouldMainCorrectOrder(){
+        Task task1 = new Task(1, "Test Task 1", "Task Description 1");
+        Task task2 = new Task(2, "Test Task 2", "Task Description 2");
+        Task task3 = new Task(3, "Test Task 3", "Task Description 3");
+
+        historyManager.add(task1);
+        historyManager.add(task2);
+        historyManager.add(task3);
+
+        List<Task> history = historyManager.getHistory();
+        assertEquals(3, history.size());
+        assertEquals(task1, history.get(0));
+        assertEquals(task2, history.get(1));
+        assertEquals(task3, history.get(2));
     }
 
 
+    @Test
+    void addDuplicateTaskShouldReplaceEntry(){
+        Task task1 = new Task(1, "Test Task 1", "Task Description 1");
+        Task task2 = new Task(2, "Test Task 2", "Task Description 2");
+
+        historyManager.add(task1);
+        historyManager.add(task2);
+        historyManager.add(task1);
+
+        List<Task> history = historyManager.getHistory();
+        assertEquals(2, history.size());
+        assertEquals(task2, history.get(0));
+        assertEquals(task1, history.get(1));
+    }
+
+
+    @Test
+    void removeAllTasksShouldReturnEmptyHistory(){
+        Task task1 = new Task(1, "Test Task 1", "Task Description 1");
+        Task task2 = new Task(2, "Test Task 2", "Task Description 2");
+
+        historyManager.add(task1);
+        historyManager.add(task2);
+
+        historyManager.remote(task1.getId());
+        historyManager.remote(task2.getId());
+
+        List<Task> history = historyManager.getHistory();
+        assertTrue(history.isEmpty());
+    }
 
 }
