@@ -1,5 +1,3 @@
-package test;
-
 import history.HistoryManager;
 import managers.Managers;
 import org.junit.jupiter.api.BeforeEach;
@@ -8,7 +6,8 @@ import tasks.Task;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class InMemoryHistoryManagerTest {
 
