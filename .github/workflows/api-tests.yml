@@ -5,6 +5,6 @@ on:
 
 jobs:
   build:
-    uses: yandex-practicum/java-kanban/.github/workflows/api-test.yml@ci
+    uses: yandex-praktikum/java-kanban/.github/workflows/api-tests.yml@ci
 
-    #full version
+    #full version 2
