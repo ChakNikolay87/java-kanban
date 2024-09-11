@@ -1,5 +1,3 @@
-package tests;
-
 import managers.Managers;
 import managers.TaskManager;
 import org.junit.jupiter.api.BeforeEach;
