@@ -8,7 +8,9 @@ import tasks.TaskStatus;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private final File file;
@@ -84,6 +86,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         save();
     }
 
+
     @Override
     public void updateSubtask(Subtask subtask) {
         super.updateSubtask(subtask);
@@ -109,20 +112,68 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
 
+    @Override
+    public void deleteAllTasks() {
+        super.deleteAllTasks();
+        save();
+    }
+
+    @Override
+    public void deleteAllEpics() {
+        super.deleteAllEpics();
+        save();
+    }
+
+    @Override
+    public void deleteAllSubtasks() {
+        super.deleteAllSubtasks();
+        save();
+    }
+
+    @Override
+    public Task getTaskById(int id) {
+        Task task = super.getTaskById(id);
+        return task;
+    }
+
+    @Override
+    public Epic getEpicById(int id) {
+        Epic epic = super.getEpicById(id);
+        return epic;
+    }
+
+    @Override
+    public Subtask getSubtaskById(int id) {
+        Subtask subtask = super.getSubtaskById(id);
+        return subtask;
+    }
+
+
     public static FileBackedTaskManager loadFromFile(File file) {
         FileBackedTaskManager manager = new FileBackedTaskManager(file);
         try {
             List<String> lines = Files.readAllLines(Path.of(file.getPath()));
+            Map<Integer, Epic> epicMap = new HashMap<>();
+            Map<Integer, Subtask> subtaskMap = new HashMap<>();
+
             for (String line : lines) {
                 if (!line.startsWith("id")) {
                     Task task = fromString(line);
                     if (task instanceof Epic) {
                         manager.createEpic((Epic) task);
+                        epicMap.put(task.getId(), (Epic) task);
                     } else if (task instanceof Subtask) {
-                        manager.createSubtask((Subtask) task);
+                        subtaskMap.put(task.getId(), (Subtask) task);
                     } else {
                         manager.createTask(task);
                     }
+                }
+            }
+
+            for (Subtask subtask : subtaskMap.values()) {
+                Epic epic = epicMap.get(subtask.getEpicId());
+                if (epic != null) {
+                    manager.createSubtask(subtask);
                 }
             }
         } catch (IOException e) {
@@ -131,7 +182,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         return manager;
     }
 
-    // Convert CSV string back to task
+
     private static Task fromString(String value) {
         String[] fields = value.split(",");
         int id = Integer.parseInt(fields[0]);
@@ -139,18 +190,17 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         String name = fields[2];
         TaskStatus status = TaskStatus.valueOf(fields[3]);
         String description = fields[4];
+
         switch (TaskType.valueOf(type)) {
-            case TASK -> {
-                return new Task(id, name, description);
-            }
-            case EPIC -> {
-                return new Epic(id, name, description);
-            }
-            case SUBTASK -> {
+            case TASK:
+                return new Task(id, name, description, status);
+            case EPIC:
+                return new Epic(id, name, description, status);
+            case SUBTASK:
                 int epicId = Integer.parseInt(fields[5]);
-                return new Subtask(id, name, description, epicId);
-            }
-            default -> throw new IllegalArgumentException("Unknown task type: " + type);
+                return new Subtask(id, name, description, epicId, status);
+            default:
+                throw new IllegalArgumentException("Unknown task type: " + type);
         }
     }
 
@@ -158,19 +208,24 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     public static void main(String[] args) throws IOException {
 
         File tempFile = File.createTempFile("tasks", ".csv");
+        tempFile.deleteOnExit();
+
 
         FileBackedTaskManager manager = new FileBackedTaskManager(tempFile);
 
-        Task task = new Task(0, "Test Task", "Test Description");
+        Task task = new Task(0, "Test Task", "Test Description", TaskStatus.NEW);
         manager.createTask(task);
 
-        Epic epic = new Epic(0, "Test Epic", "Epic Description");
+        Epic epic = new Epic(1, "Test Epic", "Epic Description", TaskStatus.IN_PROGRESS);
         manager.createEpic(epic);
 
-        Subtask subtask = new Subtask(0, "Test Subtask", "Subtask Description", epic.getId());
+        Subtask subtask = new Subtask(2, "Test Subtask", "Subtask Description", epic.getId(), TaskStatus.DONE);
         manager.createSubtask(subtask);
 
+
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
+
+
         System.out.println("Loaded tasks: " + loadedManager.getTasks());
         System.out.println("Loaded epics: " + loadedManager.getEpics());
         System.out.println("Loaded subtasks: " + loadedManager.getSubtasks());
