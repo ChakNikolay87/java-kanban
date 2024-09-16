@@ -1,10 +1,10 @@
 import managers.FileBackedTaskManager;
-import managers.ManagerSaveException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import tasks.Epic;
 import tasks.Subtask;
 import tasks.Task;
+import tasks.TaskStatus;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,7 +23,7 @@ public class FileBackedTaskManagerTest {
 
     @Test
     void shouldSaveAndLoadTaskCorrectly() {
-        Task task = new Task(0, "Test Task", "Test Description");
+        Task task = new Task(0, "Test Task", "Test Description", TaskStatus.NEW);
         manager.createTask(task);
 
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(file);
@@ -31,41 +31,43 @@ public class FileBackedTaskManagerTest {
         Task loadedTask = loadedManager.getTasks().get(0);
         assertEquals(task.getName(), loadedTask.getName());
         assertEquals(task.getDescription(), loadedTask.getDescription());
+        assertEquals(task.getStatus(), loadedTask.getStatus());
     }
-
 
     @Test
     void shouldSaveAndLoadEpicCorrectly() {
-        Epic epic = new Epic(0, "Test Epic", "Epic Description");
+        Epic epic = new Epic(0, "Test Epic", "Epic Description", TaskStatus.NEW);
         manager.createEpic(epic);
 
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(file);
 
         assertEquals(1, loadedManager.getEpics().size());
-        Epic loadedTask = loadedManager.getEpics().get(0);
-        assertEquals(epic.getName(), loadedTask.getName());
-        assertEquals(epic.getDescription(), loadedTask.getDescription());
+        Epic loadedEpic = loadedManager.getEpics().get(0);
+        assertEquals(epic.getName(), loadedEpic.getName());
+        assertEquals(epic.getDescription(), loadedEpic.getDescription());
+        assertEquals(epic.getStatus(), loadedEpic.getStatus());
     }
 
     @Test
-    void shouldSaveAndLoadSubtaskCorrectly(){
-        Epic epic = new Epic(0, "Test Epic", "Epic Description");
+    void shouldSaveAndLoadSubtaskCorrectly() {
+        Epic epic = new Epic(0, "Test Epic", "Epic Description", TaskStatus.NEW);
         manager.createEpic(epic);
-        Subtask subtask = new Subtask(0, "Test Subtask", "Subtask Description", epic.getId());
+        Subtask subtask = new Subtask(0, "Test Subtask", "Subtask Description", epic.getId(), TaskStatus.NEW);
         manager.createSubtask(subtask);
 
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(file);
 
         assertEquals(1, loadedManager.getEpics().size());
-        Subtask loadedSubTask = loadedManager.getSubtasks().get(0);
-        assertEquals(subtask.getName(), loadedSubTask.getName());
-        assertEquals(subtask.getDescription(), loadedSubTask.getDescription());
-        assertEquals(subtask.getEpicId(), loadedSubTask.getEpicId());
+        Subtask loadedSubtask = loadedManager.getSubtasks().get(0);
+        assertEquals(subtask.getName(), loadedSubtask.getName());
+        assertEquals(subtask.getDescription(), loadedSubtask.getDescription());
+        assertEquals(subtask.getEpicId(), loadedSubtask.getEpicId());
+        assertEquals(subtask.getStatus(), loadedSubtask.getStatus());
     }
 
     @Test
-    void shouldDeleteTaskAndSaveChanges(){
-        Task task = new Task(0, "Test Task", "Test Description");
+    void shouldDeleteTaskAndSaveChanges() {
+        Task task = new Task(0, "Test Task", "Test Description", TaskStatus.NEW);
         manager.createTask(task);
 
         manager.deleteTaskById(task.getId());
@@ -74,5 +76,4 @@ public class FileBackedTaskManagerTest {
 
         assertEquals(0, loadedManager.getTasks().size());
     }
-
 }
