@@ -1,14 +1,17 @@
 package tasks;
 
+import managers.TaskType;
+
 import java.util.Objects;
 
 public class Subtask extends Task {
     private final int epicId;
 
-    public Subtask(int id, String name, String description, int epicId) {
-        super(id, name, description);
+    public Subtask(int id, String name, String description, int epicId, TaskStatus status) {
+        super(id, name, description, status);
         this.epicId = epicId;
     }
+
 
 
 
@@ -33,12 +36,11 @@ public class Subtask extends Task {
 
     @Override
     public String toString() {
-        return "Subtask{" +
-                "id=" + getId() +
-                ", name='" + getName() + '\'' +
-                ", description='" + getDescription() + '\'' +
-                ", status=" + getStatus() +
-                ", epicId=" + epicId +
-                '}';
+        return String.format("%s,%d", super.toString(), epicId);
+    }
+
+    @Override
+    public String type() {
+        return TaskType.SUBTASK.name();
     }
 }
