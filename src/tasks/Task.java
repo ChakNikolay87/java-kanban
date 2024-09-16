@@ -1,5 +1,7 @@
 package tasks;
 
+import managers.TaskType;
+
 import java.util.Objects;
 
 public class Task {
@@ -8,11 +10,11 @@ public class Task {
     private String description;
     private TaskStatus status;
 
-    public Task(int id, String name, String description) {
+    public Task(int id, String name, String description, TaskStatus status) {
         this.id = id;
         this.name = name;
         this.description = description;
-        this.status = TaskStatus.NEW;
+        this.status = status;
     }
 
     public int getId() {
@@ -60,13 +62,11 @@ public class Task {
         return Objects.hash(id, name, description, status);
     }
 
-    @Override
     public String toString() {
-        return "Task{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", status=" + status +
-                '}';
+        return String.format("%d,%s,%s,%s,%s", id, type(), name, status, description);
+    }
+
+    public String type() {
+        return TaskType.TASK.name();
     }
 }
