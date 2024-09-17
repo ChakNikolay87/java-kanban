@@ -130,23 +130,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         save();
     }
 
-    @Override
-    public Task getTaskById(int id) {
-        Task task = super.getTaskById(id);
-        return task;
-    }
-
-    @Override
-    public Epic getEpicById(int id) {
-        Epic epic = super.getEpicById(id);
-        return epic;
-    }
-
-    @Override
-    public Subtask getSubtaskById(int id) {
-        Subtask subtask = super.getSubtaskById(id);
-        return subtask;
-    }
 
 
     public static FileBackedTaskManager loadFromFile(File file) {
@@ -160,7 +143,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 if (!line.startsWith("id")) {
                     Task task = fromString(line);
                     if (task instanceof Epic) {
-                        manager.createEpic((Epic) task);
                         epicMap.put(task.getId(), (Epic) task);
                     } else if (task instanceof Subtask) {
                         subtaskMap.put(task.getId(), (Subtask) task);
@@ -168,6 +150,10 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                         manager.createTask(task);
                     }
                 }
+            }
+
+            for (Epic epic : epicMap.values()) {
+                manager.createEpic(epic);
             }
 
             for (Subtask subtask : subtaskMap.values()) {
@@ -181,6 +167,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         }
         return manager;
     }
+
 
 
     private static Task fromString(String value) {
