@@ -62,10 +62,11 @@ public class Task {
         return Objects.hash(id, name, description, status);
     }
 
+    @Override
     public String toString() {
         return String.format("%d,%s,%s,%s,%s", id, TaskType.TASK, name, status, description);
     }
-    
+
     public String taskToString() {
         return String.format("%d,%s,%s,%s,%s", getId(), TaskType.TASK.name(), getName(), getStatus(), getDescription());
     }
@@ -81,11 +82,10 @@ public class Task {
         if (taskType == TaskType.TASK) {
             return new Task(id, name, description, status);
         }
-        throw new IllegalArgumentException("Неподдерживаемый тип задачи: %s" + taskType);
+        throw new IllegalArgumentException("Неподдерживаемый тип задачи: " + taskType);
     }
 
     public String type() {
         return TaskType.TASK.name();
     }
-
 }
