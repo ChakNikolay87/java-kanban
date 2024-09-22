@@ -76,4 +76,61 @@ public class FileBackedTaskManagerTest {
 
         assertEquals(0, loadedManager.getTasks().size());
     }
+
+    @Test
+    public void ManagerStateBeforeAndAfterSaving() throws Exception {
+        File tempFile = File.createTempFile("tasks", ".csv");
+        tempFile.deleteOnExit();
+
+        FileBackedTaskManager manager = new FileBackedTaskManager(tempFile);
+
+        Task task = new Task(0, "Test Task", "Test Description", TaskStatus.NEW);
+        manager.createTask(task);
+
+        Epic epic = new Epic(1, "Test Epic", "Epic Description", TaskStatus.IN_PROGRESS);
+        manager.createEpic(epic);
+
+        Subtask subtask = new Subtask(2, "Test Subtask", "Subtask Description", epic.getId(), TaskStatus.DONE);
+        manager.createSubtask(subtask);
+
+        int originalTaskCount = manager.getTasks().size();
+        int originalEpicCount = manager.getEpics().size();
+        int originalSubtaskCount = manager.getSubtasks().size();
+
+        FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
+
+        assertEquals(originalTaskCount, loadedManager.getTasks().size(), "Task counts do not match.");
+        assertEquals(originalEpicCount, loadedManager.getEpics().size(), "Epic counts do not match.");
+        assertEquals(originalSubtaskCount, loadedManager.getSubtasks().size(), "Subtask counts do not match.");
+
+        assertEquals(manager.getTasks(), loadedManager.getTasks(), "Tasks do not match.");
+        assertEquals(manager.getEpics(), loadedManager.getEpics(), "Epics do not match.");
+        assertEquals(manager.getSubtasks(), loadedManager.getSubtasks(), "Subtasks do not match.");
+    }
+
+    @Test
+    void testManagerStateBeforeAndAfterSaving() {
+        Task task = new Task(1, "Test Task", "Test Description", TaskStatus.NEW);
+        manager.createTask(task);
+
+        Epic epic = new Epic(2, "Test Epic", "Epic Description", TaskStatus.NEW);
+        manager.createEpic(epic);
+
+        Subtask subtask = new Subtask(3, "Test Subtask", "Subtask Description", epic.getId(), TaskStatus.IN_PROGRESS);
+        manager.createSubtask(subtask);
+
+        int originalTaskCount = manager.getTasks().size();
+        int originalEpicCount = manager.getEpics().size();
+        int originalSubtaskCount = manager.getSubtasks().size();
+
+        FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(file);
+
+        assertEquals(originalTaskCount, loadedManager.getTasks().size(), "Количество задач должно совпадать.");
+        assertEquals(originalEpicCount, loadedManager.getEpics().size(), "Количество эпиков должно совпадать.");
+        assertEquals(originalSubtaskCount, loadedManager.getSubtasks().size(), "Количество подзадач должно совпадать.");
+
+        assertEquals(manager.getTasks(), loadedManager.getTasks(), "Задачи должны совпадать.");
+        assertEquals(manager.getEpics(), loadedManager.getEpics(), "Эпики должны совпадать.");
+        assertEquals(manager.getSubtasks(), loadedManager.getSubtasks(), "Подзадачи должны совпадать.");
+    }
 }
