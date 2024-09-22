@@ -76,6 +76,25 @@ public class Epic extends Task {
     }
 
     @Override
+    public String taskToString() {
+        return String.format("%d,%s,%s,%s,%s", getId(), TaskType.EPIC.name(), getName(), getStatus(), getDescription());
+    }
+
+    public static Epic fromString(String value) {
+        String[] fields = value.split(",");
+        int id = Integer.parseInt(fields[0]);
+        TaskType taskType = TaskType.valueOf(fields[1]);
+        String name = fields[2];
+        TaskStatus status = TaskStatus.valueOf(fields[3]);
+        String description = fields[4];
+
+        if (taskType == TaskType.EPIC) {
+            return new Epic(id, name, description, status);
+        }
+        throw new IllegalArgumentException("Неподдерживаемый тип задачи: %s" + taskType);
+    }
+
+    @Override
     public String type() {
         return TaskType.EPIC.name();
     }
