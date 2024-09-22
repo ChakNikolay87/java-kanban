@@ -13,8 +13,6 @@ public class Subtask extends Task {
     }
 
 
-
-
     public int getEpicId() {
         return epicId;
     }
@@ -37,6 +35,26 @@ public class Subtask extends Task {
     @Override
     public String toString() {
         return String.format("%s,%d", super.toString(), epicId);
+    }
+
+    @Override
+    public String taskToString() {
+        return String.format("%d,%s,%s,%s,%s,%d", getId(), TaskType.SUBTASK.name(), getName(), getStatus(), getDescription(), getEpicId());
+    }
+
+    public static Subtask fromString(String value) {
+        String[] fields = value.split(",");
+        int id = Integer.parseInt(fields[0]);
+        TaskType taskType = TaskType.valueOf(fields[1]);
+        String name = fields[2];
+        TaskStatus status = TaskStatus.valueOf(fields[3]);
+        String description = fields[4];
+        int epicId = Integer.parseInt(fields[5]);
+
+        if (taskType == TaskType.SUBTASK) {
+            return new Subtask(id, name, description, epicId, status);
+        }
+        throw new IllegalArgumentException("Неподдерживаемый тип задачи: %s" + taskType);
     }
 
     @Override
