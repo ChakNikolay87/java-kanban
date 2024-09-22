@@ -66,7 +66,7 @@ public class Task {
     public String toString() {
         return String.format("%d,%s,%s,%s,%s", id, TaskType.TASK, name, status, description);
     }
-
+    
     public String taskToString() {
         return String.format("%d,%s,%s,%s,%s", getId(), TaskType.TASK.name(), getName(), getStatus(), getDescription());
     }
