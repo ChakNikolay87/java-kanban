@@ -7,10 +7,7 @@ import tasks.TaskStatus;
 
 import java.io.*;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private final File file;
@@ -18,7 +15,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     public FileBackedTaskManager(File file) {
         this.file = file;
     }
-
 
     private void save() {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
@@ -32,18 +28,17 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             for (Subtask subtask : getSubtasks()) {
                 writer.write(taskToString(subtask) + "\n");
             }
+
         } catch (IOException e) {
             throw new ManagerSaveException("Failed to save to file", e);
         }
     }
-
 
     private String taskToString(Task task) {
         String epicId = (task instanceof Subtask) ? String.valueOf(((Subtask) task).getEpicId()) : "";
         return String.format("%d,%s,%s,%s,%s,%s", task.getId(), getTaskType(task), task.getName(),
                 task.getStatus(), task.getDescription(), epicId);
     }
-
 
     private String getTaskType(Task task) {
         if (task instanceof Subtask) {
@@ -53,6 +48,27 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         } else {
             return TaskType.TASK.name();
         }
+    }
+
+    @Override
+    public Task addTask(Task task) {
+        Task newTask = super.addTask(task);
+        save();
+        return newTask;
+    }
+
+    @Override
+    public Epic addEpic(Epic epic) {
+        Epic newEpic = super.addEpic(epic);
+        save();
+        return newEpic;
+    }
+
+    @Override
+    public Subtask addSubtask(Subtask subtask) {
+        Subtask newSubtask = super.addSubtask(subtask);
+        save();
+        return newSubtask;
     }
 
 
@@ -86,7 +102,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         save();
     }
 
-
     @Override
     public void updateSubtask(Subtask subtask) {
         super.updateSubtask(subtask);
@@ -111,7 +126,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         save();
     }
 
-
     @Override
     public void deleteAllTasks() {
         super.deleteAllTasks();
@@ -130,66 +144,43 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         save();
     }
 
-
-
     public static FileBackedTaskManager loadFromFile(File file) {
         FileBackedTaskManager manager = new FileBackedTaskManager(file);
+        int maxId = 0;
+
         try {
-            List<String> lines = Files.readAllLines(Path.of(file.getPath()));
-            Map<Integer, Epic> epicMap = new HashMap<>();
-            Map<Integer, Subtask> subtaskMap = new HashMap<>();
+            List<String> lines = Files.readAllLines(file.toPath());
+            for (String line : lines.subList(1, lines.size())) {
+                String[] fields = line.split(",");
+                TaskType taskType = TaskType.valueOf(fields[1]);
 
-            for (String line : lines) {
-                if (!line.startsWith("id")) {
-                    Task task = fromString(line);
-                    if (task instanceof Epic) {
-                        epicMap.put(task.getId(), (Epic) task);
-                    } else if (task instanceof Subtask) {
-                        subtaskMap.put(task.getId(), (Subtask) task);
-                    } else {
-                        manager.createTask(task);
-                    }
+                switch (taskType) {
+                    case TASK:
+                        Task task = Task.fromString(line);
+                        manager.addTask(task);
+                        maxId = Math.max(maxId, task.getId());
+                        break;
+                    case SUBTASK:
+                        Subtask subtask = Subtask.fromString(line);
+                        manager.addSubtask(subtask);
+                        maxId = Math.max(maxId, subtask.getId());
+                        break;
+                    case EPIC:
+                        Epic epic = Epic.fromString(line);
+                        manager.addEpic(epic);
+                        maxId = Math.max(maxId, epic.getId());
+                        break;
+                    default:
+                        throw new IllegalArgumentException(String.format("Неизвестный тип задачи: %s", taskType));
                 }
             }
-
-            for (Epic epic : epicMap.values()) {
-                manager.createEpic(epic);
-            }
-
-            for (Subtask subtask : subtaskMap.values()) {
-                Epic epic = epicMap.get(subtask.getEpicId());
-                if (epic != null) {
-                    manager.createSubtask(subtask);
-                }
-            }
+            manager.idCounter = maxId + 1;
         } catch (IOException e) {
-            throw new ManagerSaveException("Failed to load from file", e);
+            throw new ManagerSaveException(String.format("Ошибка при загрузке данных из файла: %s", file.getName()), e);
         }
         return manager;
     }
 
-
-
-    private static Task fromString(String value) {
-        String[] fields = value.split(",");
-        int id = Integer.parseInt(fields[0]);
-        String type = fields[1];
-        String name = fields[2];
-        TaskStatus status = TaskStatus.valueOf(fields[3]);
-        String description = fields[4];
-
-        switch (TaskType.valueOf(type)) {
-            case TASK:
-                return new Task(id, name, description, status);
-            case EPIC:
-                return new Epic(id, name, description, status);
-            case SUBTASK:
-                int epicId = Integer.parseInt(fields[5]);
-                return new Subtask(id, name, description, epicId, status);
-            default:
-                throw new IllegalArgumentException("Unknown task type: " + type);
-        }
-    }
 
 
     public static void main(String[] args) throws IOException {
