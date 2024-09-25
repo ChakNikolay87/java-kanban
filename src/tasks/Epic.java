@@ -1,83 +1,80 @@
 package tasks;
 
-import managers.TaskType;
-
-import java.util.ArrayList;
-import java.util.List;
+import manager.TaskType;
+import status.Status;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.Objects;
 
 public class Epic extends Task {
+    private HashMap<Integer, Subtask> epicSubtusks;
 
-        private final List<Subtask> subtasks;
+    public Epic(String name, String description) {
+        super(name, description);
+        this.epicSubtusks = new HashMap<>();
 
-        public Epic(int id, String name, String description, TaskStatus status) {
-            super(id, name, description, status);
-            this.subtasks = new ArrayList<>();
+    }
+
+    public Epic(String name, String description, int id) {
+        super(name, description, id);
+        this.epicSubtusks = new HashMap<>();
+    }
+
+    public Epic(String name, String description, Status status, int id) {
+        super(name, description, status, id);
+        this.epicSubtusks = new HashMap<>();
+    }
+
+    public Epic(String name, String description, int id, Status status, Duration duration, LocalDateTime startTime) {
+        super(name, description, id, status, duration, startTime);
+
+        this.epicSubtusks = new HashMap<>();
+    }
+
+    public HashMap<Integer, Subtask> getEpicSubtusks() {
+        return epicSubtusks;
+    }
+
+    public void setEpicSubtusks(HashMap<Integer, Subtask> epicSubtusks) {
+        this.epicSubtusks = epicSubtusks;
+    }
+
+    public void put(Subtask subtask) {
+        epicSubtusks.put(subtask.getId(), subtask);
+        super.setStatus(isSubtasksDone());
+        updateEpicTime();
+    }
+
+    public void clear() {
+        epicSubtusks.clear();
+    }
+
+    public Status isSubtasksDone() {
+        if (epicSubtusks.values().stream().anyMatch(subtask -> subtask.getStatus() == Status.INPROGRESS)) {
+            return Status.INPROGRESS;
         }
-
-    public List<Subtask> getSubtasks() {
-        return subtasks;
-    }
-
-    public void addSubtask(Subtask subtask) {
-        subtasks.add(subtask);
-        updateStatus();
-    }
-
-    public void removeSubtask(Subtask subtask) {
-        subtasks.remove(subtask);
-        updateStatus();
-    }
-
-    public void updateStatus() {
-        if (subtasks.isEmpty()) {
-            setStatus(TaskStatus.NEW);
-            return;
+        if (epicSubtusks.values().stream().allMatch(subtask -> subtask.getStatus() == Status.DONE)) {
+            return Status.DONE;
         }
-
-        boolean allDone = true;
-        boolean allNew = true;
-
-        for (Subtask subtask : subtasks) {
-            if (subtask.getStatus() != TaskStatus.DONE) {
-                allDone = false;
-            }
-            if (subtask.getStatus() != TaskStatus.NEW) {
-                allNew = false;
-            }
+        if (epicSubtusks.values().stream().allMatch(subtask -> subtask.getStatus() == Status.NEW)) {
+            return Status.NEW;
         }
-
-        if (allDone) {
-            setStatus(TaskStatus.DONE);
-        } else if (allNew) {
-            setStatus(TaskStatus.NEW);
-        } else {
-            setStatus(TaskStatus.IN_PROGRESS);
-        }
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
-        Epic epic = (Epic) o;
-        return Objects.equals(subtasks, epic.subtasks);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), subtasks);
+        return Status.INPROGRESS;
     }
 
     @Override
     public String toString() {
-        return String.format("%s,%s", super.toString(), ""); // Поскольку Epic не имеет epicId
-    }
-
-    @Override
-    public String taskToString() {
-        return String.format("%d,%s,%s,%s,%s", getId(), TaskType.EPIC.name(), getName(), getStatus(), getDescription());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+        return String.format("%d,%s,%s,%s,%s,%d,%s",
+                getId(),
+                TaskType.EPIC,
+                getName(),
+                getStatus(),
+                getDescription(),
+                getDuration() != null ? getDuration().toMinutes() : 0,
+                getStartTime() != null ? getStartTime().format(formatter) : "null");
     }
 
     public static Epic fromString(String value) {
@@ -85,17 +82,46 @@ public class Epic extends Task {
         int id = Integer.parseInt(fields[0]);
         TaskType taskType = TaskType.valueOf(fields[1]);
         String name = fields[2];
-        TaskStatus status = TaskStatus.valueOf(fields[3]);
+        Status status = Status.valueOf(fields[3]);
         String description = fields[4];
+        long durationMinutes = Long.parseLong(fields[5]);
+        Duration duration = Duration.ofMinutes(durationMinutes);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+        LocalDateTime startTime = LocalDateTime.parse(fields[6], formatter);
 
         if (taskType == TaskType.EPIC) {
-            return new Epic(id, name, description, status);
+            Epic epic = new Epic(name, description, id, status, duration, startTime);
+            epic.setDuration(duration); // Используем метод для установки duration
+            epic.setStartTime(startTime);
+            return epic;
         }
-        throw new IllegalArgumentException("Неподдерживаемый тип задачи: %s" + taskType);
+        throw new IllegalArgumentException(String.format("Неподдерживаемый тип задачи: %s", taskType));
     }
 
-    @Override
-    public String type() {
-        return TaskType.EPIC.name();
+    public void updateEpicTime() {
+        if (getEpicSubtusks().isEmpty()) {
+            setStartTime(null);
+            setDuration(Duration.ZERO);
+        } else {
+            LocalDateTime startTime = getEpicSubtusks().values().stream()
+                    .map(Subtask::getStartTime)
+                    .filter(Objects::nonNull)
+                    .min(LocalDateTime::compareTo)
+                    .orElse(null);
+
+            LocalDateTime endTime = getEpicSubtusks().values().stream()
+                    .map(Subtask::getEndTime)
+                    .filter(Objects::nonNull)
+                    .max(LocalDateTime::compareTo)
+                    .orElse(null);
+
+            setStartTime(startTime);
+
+            if (startTime != null && endTime != null) {
+                setDuration(Duration.between(startTime, endTime));
+            } else {
+                setDuration(Duration.ZERO);
+            }
+        }
     }
 }
