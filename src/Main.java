@@ -1,63 +1,51 @@
-import managers.Managers;
-import managers.TaskManager;
+import managers.FileBackedTaskManager;
 import tasks.Epic;
 import tasks.Subtask;
 import tasks.Task;
 import tasks.TaskStatus;
 
+import java.io.File;
+import java.io.IOException;
+
 public class Main {
     public static void main(String[] args) {
-        TaskManager taskManager = Managers.getDefault();
+        try {
+            // Create a temporary file to store task data
+            File tempFile = File.createTempFile("tasks", ".csv");
+            tempFile.deleteOnExit();
 
-        Task task1 = new Task(0, "Task 1", "Description 1");
-        taskManager.createTask(task1);
+            // Initialize FileBackedTaskManager with the temp file
+            FileBackedTaskManager manager = new FileBackedTaskManager(tempFile);
 
-        Task task2 = new Task(0, "Task 2", "Description 2");
-        taskManager.createTask(task2);
+            // Create and add tasks
+            Task task1 = new Task(0, "Task 1", "Description 1", TaskStatus.NEW);
+            Task task2 = new Task(1, "Task 2", "Description 2", TaskStatus.IN_PROGRESS);
+            manager.createTask(task1);
+            manager.createTask(task2);
 
-        Epic epic1 = new Epic(0, "Epic 1", "Description 1");
-        taskManager.createEpic(epic1);
+            // Create and add epics
+            Epic epic1 = new Epic(0, "Epic 1", "Description 1", TaskStatus.NEW);
+            Epic epic2 = new Epic(1, "Epic 2", "Description 2", TaskStatus.IN_PROGRESS);
+            manager.createEpic(epic1);
+            manager.createEpic(epic2);
 
-        Subtask subtask1 = new Subtask(0, "Subtask 1", "Description 1", epic1.getId());
-        taskManager.createSubtask(subtask1);
+            // Create and add subtasks
+            Subtask subtask1 = new Subtask(0, "Subtask 1", "Description 1", epic1.getId(), TaskStatus.DONE);
+            Subtask subtask2 = new Subtask(1, "Subtask 2", "Description 2", epic1.getId(), TaskStatus.IN_PROGRESS);
+            Subtask subtask3 = new Subtask(2, "Subtask 3", "Description 3", epic2.getId(), TaskStatus.NEW);
+            manager.createSubtask(subtask1);
+            manager.createSubtask(subtask2);
+            manager.createSubtask(subtask3);
 
-        Subtask subtask2 = new Subtask(0, "Subtask 2", "Description 2", epic1.getId());
-        taskManager.createSubtask(subtask2);
+            // Load tasks from the file
+            FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
 
-        Epic epic2 = new Epic(0, "Epic 2", "Description 2");
-        taskManager.createEpic(epic2);
-
-        Subtask subtask3 = new Subtask(0, "Subtask 3", "Description 3", epic2.getId());
-        taskManager.createSubtask(subtask3);
-
-        System.out.println("All Tasks: " + taskManager.getTasks());
-        System.out.println("All Epics: " + taskManager.getEpics());
-        System.out.println("All Subtasks: " + taskManager.getSubtasks());
-
-        task1.setStatus(TaskStatus.DONE);
-        taskManager.updateTask(task1);
-
-        subtask1.setStatus(TaskStatus.DONE);
-        taskManager.updateSubtask(subtask1);
-
-        subtask2.setStatus(TaskStatus.DONE);
-        taskManager.updateSubtask(subtask2);
-
-        subtask3.setStatus(TaskStatus.IN_PROGRESS);
-        taskManager.updateSubtask(subtask3);
-
-        System.out.println("Updated Tasks: " + taskManager.getTasks());
-        System.out.println("Updated Epics: " + taskManager.getEpics());
-        System.out.println("Updated Subtasks: " + taskManager.getSubtasks());
-
-        System.out.println("History of viewed tasks: " + taskManager.getHistory());
-
-        taskManager.deleteTaskById(task1.getId());
-        taskManager.deleteEpicById(epic1.getId());
-
-        System.out.println("After Deletion - All Tasks: " + taskManager.getTasks());
-        System.out.println("After Deletion - All Epics: " + taskManager.getEpics());
-        System.out.println("After Deletion - All Subtasks: " + taskManager.getSubtasks());
-        System.out.println("History of viewed tasks after deletion: " + taskManager.getHistory());
+            // Print loaded tasks, epics, and subtasks
+            System.out.println("Loaded tasks: " + loadedManager.getTasks());
+            System.out.println("Loaded epics: " + loadedManager.getEpics());
+            System.out.println("Loaded subtasks: " + loadedManager.getSubtasks());
+        } catch (IOException e) {
+            System.err.println("An error occurred while handling the file: " + e.getMessage());
+        }
     }
 }

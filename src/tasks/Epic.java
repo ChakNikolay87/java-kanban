@@ -1,17 +1,19 @@
 package tasks;
 
+import managers.TaskType;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 public class Epic extends Task {
-    private final List<Subtask> subtasks;
 
-    public Epic(int id, String name, String description) {
-        super(id, name, description);
-        this.subtasks = new ArrayList<>();
-        updateStatus();
-    }
+        private final List<Subtask> subtasks;
+
+        public Epic(int id, String name, String description, TaskStatus status) {
+            super(id, name, description, status);
+            this.subtasks = new ArrayList<>();
+        }
 
     public List<Subtask> getSubtasks() {
         return subtasks;
@@ -70,12 +72,30 @@ public class Epic extends Task {
 
     @Override
     public String toString() {
-        return "Epic{" +
-                "id=" + getId() +
-                ", name='" + getName() + '\'' +
-                ", description='" + getDescription() + '\'' +
-                ", status=" + getStatus() +
-                ", subtasks=" + subtasks +
-                '}';
+        return String.format("%s,%s", super.toString(), ""); // Поскольку Epic не имеет epicId
+    }
+
+    @Override
+    public String taskToString() {
+        return String.format("%d,%s,%s,%s,%s", getId(), TaskType.EPIC.name(), getName(), getStatus(), getDescription());
+    }
+
+    public static Epic fromString(String value) {
+        String[] fields = value.split(",");
+        int id = Integer.parseInt(fields[0]);
+        TaskType taskType = TaskType.valueOf(fields[1]);
+        String name = fields[2];
+        TaskStatus status = TaskStatus.valueOf(fields[3]);
+        String description = fields[4];
+
+        if (taskType == TaskType.EPIC) {
+            return new Epic(id, name, description, status);
+        }
+        throw new IllegalArgumentException("Неподдерживаемый тип задачи: %s" + taskType);
+    }
+
+    @Override
+    public String type() {
+        return TaskType.EPIC.name();
     }
 }

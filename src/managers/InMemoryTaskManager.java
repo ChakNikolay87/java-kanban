@@ -9,11 +9,15 @@ import tasks.Task;
 import java.util.*;
 
 public class InMemoryTaskManager implements TaskManager {
-    private int idCounter = 1;
-    private final Map<Integer, Task> tasks = new HashMap<>();
-    private final Map<Integer, Epic> epics = new HashMap<>();
-    private final Map<Integer, Subtask> subtasks = new HashMap<>();
-    private final HistoryManager historyManager = Managers.getDefaultHistory();
+    protected int idCounter = 1;
+    protected final Map<Integer, Task> tasks = new HashMap<>();
+    protected final Map<Integer, Epic> epics = new HashMap<>();
+    protected final Map<Integer, Subtask> subtasks = new HashMap<>();
+    protected final HistoryManager historyManager = Managers.getDefaultHistory();
+
+    public int getIdCounter() {
+        return idCounter;
+    }
 
     @Override
     public void createTask(Task task) {
@@ -179,4 +183,48 @@ public class InMemoryTaskManager implements TaskManager {
     public List<Task> getHistory() {
         return historyManager.getHistory();
     }
+
+
+
+    @Override
+    public Task addTask(Task task) {
+        if (task.getId() == 0) {
+            task.setId(idCounter++);
+        }
+        tasks.put(task.getId(), task);
+        return task;
+    }
+
+    @Override
+    public Epic addEpic(Epic epic) {
+        if (epic.getId() == 0) {
+            epic.setId(idCounter++);
+        }
+        epics.put(epic.getId(), epic);
+        return epic;
+    }
+
+    @Override
+    public Subtask addSubtask(Subtask subtask) {
+        Epic epic = epics.get(subtask.getEpicId());
+
+        if (epic == null) {
+            throw new IllegalArgumentException("Epic with ID " + subtask.getEpicId() + " does not exist.");
+        }
+
+        if (subtask.getEpicId() == subtask.getId()) {
+            throw new IllegalArgumentException("Epic cannot be added as a subtask to itself.");
+        }
+
+        if (subtask.getId() == 0) {
+            subtask.setId(idCounter++);
+        }
+
+        subtasks.put(subtask.getId(), subtask);
+        epic.addSubtask(subtask);
+        return subtask;
+    }
+
+
+
 }

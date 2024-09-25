@@ -48,4 +48,10 @@ public interface TaskManager {
 
     List<Task> getHistory();
 
+    Task addTask(Task task);
+
+    Epic addEpic(Epic epic);
+
+    Subtask addSubtask(Subtask subtask);
+
 }
