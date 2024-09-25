@@ -1,132 +1,82 @@
-import history.HistoryManager;
-import managers.Managers;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import manager.Managers;
+import manager.TaskManager;
+import tasks.Epic;
+import tasks.Subtask;
 import tasks.Task;
-import tasks.TaskStatus;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import status.Status;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-class InMemoryHistoryManagerTest {
-
-    private HistoryManager historyManager;
-
-    @BeforeEach
-    public void setUp() {
-        historyManager = Managers.getDefaultHistory();
-    }
+public class InMemoryHistoryManagerTest {
+    TaskManager inMemoryTaskManager = Managers.getDefault();
 
     @Test
-    void addTaskToHistoryShouldAddTaskToHistory() {
-        Task task = new Task(1, "Task Task", "Task Description", TaskStatus.NEW);
-        historyManager.add(task);
-        List<Task> history = historyManager.getHistory();
-        assertEquals(1, history.size());
-        assertEquals(task, history.get(0));
-        assertEquals(TaskStatus.NEW, history.get(0).getStatus());
+    public void historyManagerShouldPutCurrentTasks() {
+        Task task1 = new Task("Переезд",
+                "Собрать вещи",
+                Duration.ofMinutes(60),
+                LocalDateTime.of(2024, 9, 23, 10, 20));
+        Epic epic1 = new Epic("Чертежи моста", "Сделать проект моста через реку Волга");
+        Subtask subtask1 = new Subtask("Пролетное строение",
+                "Начертить пролетное строение",
+                2,
+                Duration.ofDays(14),
+                LocalDateTime.of(2024, 10, 13, 8, 0));
+        String message = "Задача в листе не равна вызванной ранее";
+        inMemoryTaskManager.addTask(task1);
+        inMemoryTaskManager.getTask(1);
+        inMemoryTaskManager.addEpic(epic1);
+        inMemoryTaskManager.getEpic(2);
+        inMemoryTaskManager.addSubtask(subtask1);
+        inMemoryTaskManager.getSubtask(3);
+        List<Task> listTest = inMemoryTaskManager.getHistory();
+        Assertions.assertEquals(task1, listTest.get(0), message);
+        Assertions.assertEquals(epic1, listTest.get(1), message);
+        Assertions.assertEquals(subtask1, listTest.get(2), message);
+        task1.setStatus(Status.INPROGRESS);
+        inMemoryTaskManager.getTask(1);
+        List<Task> listTest2 = inMemoryTaskManager.getHistory();
+        Assertions.assertEquals(epic1, listTest2.get(0), message);
+        Assertions.assertEquals(subtask1, listTest2.get(1), message);
+        Assertions.assertEquals(task1, listTest2.get(2), message);
+        Task task2 = new Task("Стрижка",
+                "Сходить в барбершоп",
+                Duration.ofHours(3),
+                LocalDateTime.of(2024, 9, 24, 17, 0));
+        inMemoryTaskManager.addTask(task2);
+        inMemoryTaskManager.getTask(4);
+        List<Task> listTest3 = inMemoryTaskManager.getHistory();
+        Assertions.assertEquals(epic1, listTest3.get(0), message);
+        Assertions.assertEquals(subtask1, listTest3.get(1), message);
+        Assertions.assertEquals(task1, listTest3.get(2), message);
+        Assertions.assertEquals(task2, listTest3.get(3), message);
+        inMemoryTaskManager.deleteTask(1);
+        List<Task> listTest4 = inMemoryTaskManager.getHistory();
+        Assertions.assertEquals(epic1, listTest4.get(0), message);
+        Assertions.assertEquals(subtask1, listTest4.get(1), message);
+        Assertions.assertEquals(task2, listTest4.get(2), message);
+        inMemoryTaskManager.deleteSubtask(3);
+        List<Task> listTest5 = inMemoryTaskManager.getHistory();
+        Assertions.assertEquals(epic1, listTest5.get(0), message);
+        Assertions.assertEquals(task2, listTest5.get(1), message);
+        Subtask subtask2 = new Subtask("Опоры",
+                "Начертить опоры",
+                2,
+                Duration.ofDays(8),
+                LocalDateTime.of(2024, 10, 28, 8, 0));
+        inMemoryTaskManager.addSubtask(subtask2);
+        inMemoryTaskManager.getSubtask(5);
+        List<Task> listTest6 = inMemoryTaskManager.getHistory();
+        Assertions.assertEquals(epic1, listTest6.get(0), message);
+        Assertions.assertEquals(task2, listTest6.get(1), message);
+        Assertions.assertEquals(subtask2, listTest6.get(2), message);
+        inMemoryTaskManager.deleteEpic(2);
+        List<Task> listTest7 = inMemoryTaskManager.getHistory();
+        Assertions.assertEquals(task2, listTest7.get(0), message);
+        inMemoryTaskManager.setNextId(1);
     }
-
-    @Test
-    void addTaskToHistoryShouldNotDuplicateTasks() {
-        Task task = new Task(1, "Task Task", "Task Description", TaskStatus.NEW);
-
-        historyManager.add(task);
-        historyManager.add(task);
-
-        List<Task> history = historyManager.getHistory();
-        assertEquals(1, history.size());
-        assertEquals(task, history.get(0));
-        assertEquals(TaskStatus.NEW, history.get(0).getStatus());
-    }
-
-    @Test
-    void removeTaskFromHistoryShouldRemoveTaskFromHistory() {
-        Task task1 = new Task(1, "Task Task", "Task Description 1", TaskStatus.NEW);
-        Task task2 = new Task(2, "Task Task", "Task Description 2", TaskStatus.IN_PROGRESS);
-
-        historyManager.add(task1);
-        historyManager.add(task2);
-
-        historyManager.remove(task1.getId());
-
-        List<Task> history = historyManager.getHistory();
-        assertEquals(1, history.size());
-        assertEquals(task2, history.get(0));
-        assertEquals(TaskStatus.IN_PROGRESS, history.get(0).getStatus());
-    }
-
-    @Test
-    void removeTaskFromHistoryShouldNotRemoveNonExistentTask() {
-        Task task = new Task(1, "Task Task", "Task Description", TaskStatus.NEW);
-
-        historyManager.add(task);
-        historyManager.remove(2);
-
-        List<Task> history = historyManager.getHistory();
-        assertEquals(1, history.size());
-        assertEquals(task, history.get(0));
-        assertEquals(TaskStatus.NEW, history.get(0).getStatus());
-    }
-
-    @Test
-    void getHistory_ShouldReturnEmptyList_WhenNoTasksAdded() {
-        List<Task> history = historyManager.getHistory();
-        assertTrue(history.isEmpty());
-    }
-
-    @Test
-    void addMultipleTasksToHistoryShouldMaintainCorrectOrder() {
-        Task task1 = new Task(1, "Test Task 1", "Task Description 1", TaskStatus.NEW);
-        Task task2 = new Task(2, "Test Task 2", "Task Description 2", TaskStatus.IN_PROGRESS);
-        Task task3 = new Task(3, "Test Task 3", "Task Description 3", TaskStatus.DONE);
-
-        historyManager.add(task1);
-        historyManager.add(task2);
-        historyManager.add(task3);
-
-        List<Task> history = historyManager.getHistory();
-        assertEquals(3, history.size());
-        assertEquals(task1, history.get(0));
-        assertEquals(TaskStatus.NEW, history.get(0).getStatus());
-        assertEquals(task2, history.get(1));
-        assertEquals(TaskStatus.IN_PROGRESS, history.get(1).getStatus());
-        assertEquals(task3, history.get(2));
-        assertEquals(TaskStatus.DONE, history.get(2).getStatus());
-    }
-
-    @Test
-    void addDuplicateTaskShouldReplaceEntry() {
-        Task task1 = new Task(1, "Test Task 1", "Task Description 1", TaskStatus.NEW);
-        Task task2 = new Task(2, "Test Task 2", "Task Description 2", TaskStatus.IN_PROGRESS);
-
-        historyManager.add(task1);
-        historyManager.add(task2);
-        historyManager.add(task1);
-
-        List<Task> history = historyManager.getHistory();
-        assertEquals(2, history.size());
-        assertEquals(task2, history.get(0));
-        assertEquals(TaskStatus.IN_PROGRESS, history.get(0).getStatus());
-        assertEquals(task1, history.get(1));
-        assertEquals(TaskStatus.NEW, history.get(1).getStatus());
-    }
-
-    @Test
-    void removeAllTasksShouldReturnEmptyHistory() {
-        Task task1 = new Task(1, "Test Task 1", "Task Description 1", TaskStatus.NEW);
-        Task task2 = new Task(2, "Test Task 2", "Task Description 2", TaskStatus.IN_PROGRESS);
-
-        historyManager.add(task1);
-        historyManager.add(task2);
-
-        historyManager.remove(task1.getId());
-        historyManager.remove(task2.getId());
-
-        List<Task> history = historyManager.getHistory();
-        assertTrue(history.isEmpty());
-    }
-
 }
