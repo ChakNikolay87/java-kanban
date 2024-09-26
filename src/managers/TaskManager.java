@@ -1,50 +1,57 @@
-package manager;
+package managers;
 
 import tasks.Epic;
 import tasks.Subtask;
 import tasks.Task;
-import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 import java.util.Optional;
 
 public interface TaskManager {
+
     Task addTask(Task task);
-
-    HashMap<Integer, Task> printTasks();
-
-    HashMap<Integer, Task> clearTasks();
-
-    Optional<Task> getTask(int id);
-
-    Task updateTask(Task taskToReplace);
-
-    HashMap<Integer, Task> deleteTask(int id);
 
     Epic addEpic(Epic epic);
 
-    HashMap<Integer, Epic> printEpics();
+    Subtask addSubtask(Subtask subtask);
 
-    HashMap<Integer, Epic> clearEpics();
 
-    Optional<Epic> getEpic(int id);
+    Task updateTask(Task taskToReplace);
 
     Epic updateEpic(Epic epicToReplace);
 
-    HashMap<Integer, Epic> deleteEpic(int id);
+    Subtask updateSubtask(Subtask subtaskToReplace);
 
-    Subtask addSubtask(Subtask subtask);
 
-    HashMap<Integer, Subtask> printSubtasks();
+    Map<Integer, Task> clearTasks();
 
-    HashMap<Integer, Subtask> clearSubtasks();
+    Map<Integer, Epic> clearEpics();
+
+    Map<Integer, Subtask> clearSubtasks();
+
+
+    Map<Integer, Task> deleteTask(int id);
+
+    Map<Integer, Epic> deleteEpic(int id);
+
+    Map<Integer, Subtask> deleteSubtask(int id);
+
+
+    Optional<Task> getTask(int id);
+
+    Optional<Epic> getEpic(int id);
 
     Optional<Subtask> getSubtask(int id);
 
-    Subtask updateSubtask(Subtask subtaskToReplace);
 
-    HashMap<Integer, Subtask> deleteSubtask(int id);
+    Map<Integer, Task> printTasks();
 
-    HashMap<Integer, Subtask> printSubtusksOfEpic(Epic epic);
+    Map<Integer, Epic> printEpics();
+
+    Map<Integer, Subtask> printSubtasks();
+
+;
+    List<Subtask> printSubtusksOfEpic(Epic epic);
 
     List<Task> getHistory();
 
