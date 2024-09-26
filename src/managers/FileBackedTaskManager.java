@@ -1,4 +1,4 @@
-package manager;
+package managers;
 
 import tasks.Epic;
 import tasks.Subtask;
@@ -9,8 +9,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Files;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class FileBackedTaskManager extends InMemoryTaskManager implements TaskManager {
     private final File file;
@@ -109,45 +109,44 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
     }
 
     @Override
-    public HashMap<Integer, Task> deleteTask(int id) {
-        HashMap<Integer, Task> tasks = super.deleteTask(id);
+    public Map<Integer, Task> deleteTask(int id) {
+        Map<Integer, Task> tasks = super.deleteTask(id);
         save();
         return tasks;
     }
 
     @Override
-    public HashMap<Integer, Epic> deleteEpic(int id) {
-        HashMap<Integer, Epic> epics = super.deleteEpic(id);
+    public Map<Integer, Epic> deleteEpic(int id) {
+        Map<Integer, Epic> epics = super.deleteEpic(id);
         save();
         return epics;
     }
 
     @Override
-    public HashMap<Integer, Subtask> deleteSubtask(int id) {
-        HashMap<Integer, Subtask> subtasks = super.deleteSubtask(id);
+    public Map<Integer, Subtask> deleteSubtask(int id) {
+        Map<Integer, Subtask> subtasks = super.deleteSubtask(id);
         save();
         return subtasks;
     }
 
     @Override
-    public HashMap<Integer, Task> clearTasks() {
+    public Map<Integer, Task> clearTasks() {
         super.clearTasks();
         save();
         return tasksMap;
     }
 
     @Override
-    public HashMap<Integer, Subtask> clearSubtasks() {
+    public Map<Integer, Subtask> clearSubtasks() {
         super.clearSubtasks();
         save();
         return subtasksMap;
     }
 
     @Override
-    public HashMap<Integer, Epic> clearEpics() {
+    public Map<Integer, Epic> clearEpics() {
         super.clearEpics();
         save();
         return epicsMap;
     }
-
 }
