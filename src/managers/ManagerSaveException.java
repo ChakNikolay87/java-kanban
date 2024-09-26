@@ -1,7 +1,18 @@
-package manager;
+package managers;
 
-public class ManagerSaveException extends RuntimeException {
-    public ManagerSaveException(String message) {
-        super(message);
+import history.HistoryManager;
+import history.InMemoryHistoryManager;
+
+public final class Managers {
+
+    private Managers() {
+    }
+
+    public static HistoryManager getDefaultHistory() {
+        return new InMemoryHistoryManager();
+    }
+
+    public static TaskManager getDefault() {
+        return new InMemoryTaskManager();
     }
 }
