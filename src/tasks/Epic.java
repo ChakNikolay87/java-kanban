@@ -1,20 +1,20 @@
 package tasks;
 
-import manager.TaskType;
+import managers.TaskType;
 import status.Status;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
+import java.util.HashMap;
 
 public class Epic extends Task {
-    private HashMap<Integer, Subtask> epicSubtusks;
+    private Map<Integer, Subtask> epicSubtusks;
 
     public Epic(String name, String description) {
         super(name, description);
         this.epicSubtusks = new HashMap<>();
-
     }
 
     public Epic(String name, String description, int id) {
@@ -29,15 +29,14 @@ public class Epic extends Task {
 
     public Epic(String name, String description, int id, Status status, Duration duration, LocalDateTime startTime) {
         super(name, description, id, status, duration, startTime);
-
         this.epicSubtusks = new HashMap<>();
     }
 
-    public HashMap<Integer, Subtask> getEpicSubtusks() {
+    public Map<Integer, Subtask> getEpicSubtusks() {
         return epicSubtusks;
     }
 
-    public void setEpicSubtusks(HashMap<Integer, Subtask> epicSubtusks) {
+    public void setEpicSubtusks(Map<Integer, Subtask> epicSubtusks) {
         this.epicSubtusks = epicSubtusks;
     }
 
@@ -91,7 +90,7 @@ public class Epic extends Task {
 
         if (taskType == TaskType.EPIC) {
             Epic epic = new Epic(name, description, id, status, duration, startTime);
-            epic.setDuration(duration); // Используем метод для установки duration
+            epic.setDuration(duration);
             epic.setStartTime(startTime);
             return epic;
         }
@@ -109,19 +108,13 @@ public class Epic extends Task {
                     .min(LocalDateTime::compareTo)
                     .orElse(null);
 
-            LocalDateTime endTime = getEpicSubtusks().values().stream()
-                    .map(Subtask::getEndTime)
+            Duration totalDuration = getEpicSubtusks().values().stream()
+                    .map(Subtask::getDuration)
                     .filter(Objects::nonNull)
-                    .max(LocalDateTime::compareTo)
-                    .orElse(null);
+                    .reduce(Duration.ZERO, Duration::plus);
 
             setStartTime(startTime);
-
-            if (startTime != null && endTime != null) {
-                setDuration(Duration.between(startTime, endTime));
-            } else {
-                setDuration(Duration.ZERO);
-            }
+            setDuration(totalDuration);
         }
     }
 }
