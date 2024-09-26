@@ -1,18 +1,7 @@
 package managers;
 
-import history.HistoryManager;
-import history.InMemoryHistoryManager;
-
-public final class Managers {
-
-    private Managers() {
-    }
-
-    public static HistoryManager getDefaultHistory() {
-        return new InMemoryHistoryManager();
-    }
-
-    public static TaskManager getDefault() {
-        return new InMemoryTaskManager();
+public class ManagerSaveException extends RuntimeException {
+    public ManagerSaveException(String message) {
+        super(message);
     }
 }
