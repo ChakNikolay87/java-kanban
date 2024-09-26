@@ -1,4 +1,4 @@
-package manager;
+package managers;
 
 import history.HistoryManager;
 import history.InMemoryHistoryManager;
