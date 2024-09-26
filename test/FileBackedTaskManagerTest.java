@@ -1,6 +1,6 @@
-import manager.FileBackedTaskManager;
-import manager.Managers;
-import manager.TaskManager;
+import managers.FileBackedTaskManager;
+import managers.Managers;
+import managers.TaskManager;
 import tasks.Epic;
 import tasks.Subtask;
 import tasks.Task;
@@ -14,7 +14,7 @@ import java.nio.file.Files;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -67,9 +67,9 @@ public class FileBackedTaskManagerTest {
                 "3,SUBTASK,Пролетное строение,NEW,Начертить пролетное строение,2,20160,08:00 13.10.2024\n";
         Files.writeString(file.toPath(), fileContent);
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(file);
-        HashMap<Integer, Task> tasks = loadedManager.printTasks();
-        HashMap<Integer, Epic> epics = loadedManager.printEpics();
-        HashMap<Integer, Subtask> subtasks = loadedManager.printSubtasks();
+        Map<Integer, Task> tasks = loadedManager.printTasks();
+        Map<Integer, Epic> epics = loadedManager.printEpics();
+        Map<Integer, Subtask> subtasks = loadedManager.printSubtasks();
         assertEquals(1, tasks.size());
         assertEquals(1, epics.size());
         assertEquals(1, subtasks.size());
