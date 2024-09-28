@@ -23,37 +23,35 @@ public interface TaskManager {
     Subtask updateSubtask(Subtask subtaskToReplace);
 
 
-    Map<Integer, Task> clearTasks();
+    void clearTasks();
 
-    Map<Integer, Epic> clearEpics();
+    void clearEpics();
 
-    Map<Integer, Subtask> clearSubtasks();
+    void clearSubtasks();
 
 
-    Map<Integer, Task> deleteTask(int id);
+    void deleteTask(int id);
 
-    Map<Integer, Epic> deleteEpic(int id);
+    void deleteEpic(int id);
 
-    Map<Integer, Subtask> deleteSubtask(int id);
+    void deleteSubtask(int id);
 
 
     Optional<Task> getTask(int id);
 
     Optional<Epic> getEpic(int id);
 
-    Optional<Subtask> getSubtask(int id);
+    Optional<Subtask> getSubtaskById(int id);
 
 
-    Map<Integer, Task> printTasks();
+    Map<Integer, Task> getTasks();
 
-    Map<Integer, Epic> printEpics();
+    Map<Integer, Epic> getEpics();
 
-    Map<Integer, Subtask> printSubtasks();
+    Map<Integer, Subtask> getSubtasks();
 
-;
-    List<Subtask> printSubtusksOfEpic(Epic epic);
+
+    List<Subtask> getSubtasksOfEpic(Epic epic);
 
     List<Task> getHistory();
-
-    void setNextId(int id);
 }
