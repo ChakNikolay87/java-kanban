@@ -24,6 +24,7 @@ public class FileBackedTaskManagerTest {
     public void setUp() throws IOException {
         file = File.createTempFile("test", ".csv");
         fileBackedTaskManager = new FileBackedTaskManager(file);
+        fileBackedTaskManager.setNextId(1);
     }
 
     @Test
