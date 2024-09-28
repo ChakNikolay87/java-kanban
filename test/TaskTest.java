@@ -30,7 +30,6 @@ public class TaskTest {
         task1.setStatus(Status.INPROGRESS);
         Assertions.assertNotEquals(task1.getStatus(), task2.getStatus(), "Статусы равны");
         Assertions.assertNotEquals(task1, task2, "Задачи равны");
-        inMemoryTaskManager.setNextId(1);
     }
 
     @Test
@@ -42,35 +41,34 @@ public class TaskTest {
         epic2.setStatus(Status.INPROGRESS);
         Assertions.assertNotEquals(epic1.getStatus(), epic2.getStatus(), "Статусы равны");
         Assertions.assertNotEquals(epic1, epic2, "Эпики равны");
-        inMemoryTaskManager.setNextId(1);
     }
 
     @Test
     public void subtaskShouldBeEqualsToSubtaskWithSameId() {
         Epic epic1 = new Epic("Переезд", "Собрать вещи");
         inMemoryTaskManager.addEpic(epic1);
-        Subtask subtusk2 = new Subtask("Пролетное строение",
+        Subtask subtask2 = new Subtask("Пролетное строение",
                 "Начертить пролетное строение",
-                1,
+                epic1.getId(),
                 Duration.ofDays(14),
                 LocalDateTime.of(2024, 10, 13, 8, 0));
-        inMemoryTaskManager.addSubtask(subtusk2);
-        Subtask subtusk3 = new Subtask(subtusk2.getId(),
+        inMemoryTaskManager.addSubtask(subtask2);
+        Subtask subtask3 = new Subtask(subtask2.getId(),
                 "Пролетное строение",
                 "Начертить пролетное строение",
-                subtusk2.getStatus(),
-                subtusk2.getSubtasksEpicId(),
+                subtask2.getStatus(),
+                subtask2.getSubtasksEpicId(),
                 Duration.ofDays(14),
                 LocalDateTime.of(2024, 10, 13, 8, 0));
-        Assertions.assertEquals(subtusk2, subtusk3, "Задачи не равны");
-        subtusk3.setStatus(Status.INPROGRESS);
-        Assertions.assertNotEquals(subtusk2.getStatus(), subtusk3.getStatus(), "Статусы равны");
-        Assertions.assertNotEquals(subtusk2, subtusk3, "Подзадачи равны");
+        Assertions.assertEquals(subtask2, subtask3, "Задачи не равны");
+        subtask3.setStatus(Status.INPROGRESS);
+        Assertions.assertNotEquals(subtask2.getStatus(), subtask3.getStatus(), "Статусы равны");
+        Assertions.assertNotEquals(subtask2, subtask3, "Подзадачи равны");
+
         Epic epic4 = new Epic("Переезд", "Собрать вещи", epic1.getId(), epic1.getStatus(), epic1.getDuration(), epic1.getStartTime());
         Assertions.assertEquals(epic1, epic4, "Эпики не равны");
-        inMemoryTaskManager.updateSubtask(subtusk3);
+        inMemoryTaskManager.updateSubtask(subtask3);
         epic4.setStatus(Status.INPROGRESS);
         Assertions.assertEquals(epic1, epic4, "Эпики не равны");
-        inMemoryTaskManager.setNextId(1);
     }
 }
