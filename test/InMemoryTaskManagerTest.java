@@ -1,17 +1,31 @@
+import managers.InMemoryTaskManager;
 import managers.Managers;
-import managers.TaskManager;
+import status.Status;
 import tasks.Epic;
 import tasks.Subtask;
 import tasks.Task;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import status.Status;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 public class InMemoryTaskManagerTest {
-    TaskManager inMemoryTaskManager = Managers.getDefault();
+    private InMemoryTaskManager inMemoryTaskManager;
+
+    @BeforeEach
+    public void setUp() {
+        inMemoryTaskManager = (InMemoryTaskManager) Managers.getDefault();
+        inMemoryTaskManager.setNextId(1);
+    }
+
+    @AfterEach
+    public void tearDown() {
+        inMemoryTaskManager.setNextId(1);
+    }
+
 
     @Test
     public void inMemoryTaskManagerShouldPutDifferentTypeOfTasks() {
