@@ -4,6 +4,7 @@ import tasks.Epic;
 import tasks.Subtask;
 import tasks.Task;
 import status.Status;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Scanner;
@@ -13,6 +14,7 @@ public class Main {
 
     public static void main(String[] args) {
         TaskManager inMemoryTaskManager = Managers.getDefault();
+
         Task task1 = new Task("Переезд",
                 "Собрать вещи",
                 Duration.ofMinutes(60),
@@ -21,8 +23,10 @@ public class Main {
                 "Сходить в барбершоп",
                 Duration.ofHours(3),
                 LocalDateTime.of(2024, 9, 24, 17, 0));
+
         Epic epic1 = new Epic("Чертежи моста", "Сделать проект моста через реку Волга");
         Epic epic2 = new Epic("Командировка", "Подготовиться к командировке");
+
         Subtask subtask11 = new Subtask("Пролетное строение",
                 "Начертить пролетное строение",
                 3,
@@ -38,10 +42,13 @@ public class Main {
                 4,
                 Duration.ofMinutes(10),
                 LocalDateTime.of(2024, 11, 25, 14, 5));
+
         scanner = new Scanner(System.in);
+
         while (true) {
             printMenu();
             String command = scanner.nextLine();
+
             switch (command) {
                 case "1":
                     inMemoryTaskManager.addTask(task1);
@@ -49,7 +56,6 @@ public class Main {
                     break;
                 case "2":
                     System.out.println(inMemoryTaskManager.getTasks().values());
-                    // Changed from printTasks()
                     break;
                 case "3":
                     inMemoryTaskManager.clearTasks();
@@ -60,7 +66,12 @@ public class Main {
                     System.out.println(inMemoryTaskManager.getTask(1));
                     break;
                 case "5":
-                    Task task3 = new Task("Переезд продолжение", "Собрать оставшиеся вещи", task1.getId(), Status.DONE, Duration.ofMinutes(60), LocalDateTime.of(2024, 9, 23, 10, 20));
+                    Task task3 = new Task("Переезд продолжение",
+                            "Собрать оставшиеся вещи",
+                            task1.getId(),
+                            Status.DONE,
+                            Duration.ofMinutes(60),
+                            LocalDateTime.of(2024, 9, 23, 10, 20));
                     inMemoryTaskManager.updateTask(task3);
                     System.out.println("Задача обновлена.");
                     break;
@@ -73,7 +84,7 @@ public class Main {
                     inMemoryTaskManager.addEpic(epic2);
                     break;
                 case "8":
-                    System.out.println(inMemoryTaskManager.getEpics().values());  // Changed from printEpics()
+                    System.out.println(inMemoryTaskManager.getEpics().values());
                     break;
                 case "9":
                     inMemoryTaskManager.clearEpics();
@@ -99,7 +110,7 @@ public class Main {
                     inMemoryTaskManager.addSubtask(subtask21);
                     break;
                 case "14":
-                    System.out.println(inMemoryTaskManager.getSubtasks().values());  // Changed from printSubtasks()
+                    System.out.println(inMemoryTaskManager.getSubtasks().values());
                     break;
                 case "15":
                     inMemoryTaskManager.clearSubtasks();
@@ -124,8 +135,8 @@ public class Main {
                     System.out.println("Подзадача удалена.");
                     break;
                 case "19":
-                    System.out.println(inMemoryTaskManager.getSubtasksOfEpic(epic1));  // Changed from printSubtasksOfEpic()
-                    System.out.println(inMemoryTaskManager.getSubtasksOfEpic(epic2));  // Changed from printSubtasksOfEpic()
+                    System.out.println(inMemoryTaskManager.getSubtasksOfEpic(epic1));
+                    System.out.println(inMemoryTaskManager.getSubtasksOfEpic(epic2));
                     break;
                 case "20":
                     System.out.println(inMemoryTaskManager.getHistory());
@@ -133,6 +144,9 @@ public class Main {
                 case "21":
                     System.out.println("Выход");
                     return;
+                default:
+                    System.out.println("Неверная команда. Попробуйте еще раз.");
+                    break;
             }
         }
     }
