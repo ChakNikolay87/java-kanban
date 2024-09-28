@@ -30,23 +30,4 @@ public class Subtask extends Task {
         return String.format("%d,%s,%s,%s,%s,%d,%d,%s", getId(), TaskType.SUBTASK, getName(), getStatus(),
                 getDescription(), subtasksEpicId, getDuration().toMinutes(), getStartTime().format(formatter));
     }
-
-    public static Subtask fromString(String value) {
-        String[] fields = value.split(",");
-        int id = Integer.parseInt(fields[0]);
-        TaskType taskType = TaskType.valueOf(fields[1]);
-        String name = fields[2];
-        Status status = Status.valueOf(fields[3]);
-        String description = fields[4];
-        int epicId = Integer.parseInt(fields[5]);
-        long durationMinutes = Long.parseLong(fields[6]);
-        Duration duration = Duration.ofMinutes(durationMinutes);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
-        LocalDateTime startTime = LocalDateTime.parse(fields[7], formatter);
-
-        if (taskType == TaskType.SUBTASK) {
-            return new Subtask(id, name, description, status, epicId, duration, startTime);
-        }
-        throw new IllegalArgumentException(String.format("Неподдерживаемый тип задачи: %s", taskType));
-    }
 }
