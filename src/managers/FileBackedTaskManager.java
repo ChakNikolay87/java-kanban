@@ -1,16 +1,18 @@
 package managers;
 
+import status.Status;
 import tasks.Epic;
 import tasks.Subtask;
 import tasks.Task;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Files;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Map;
 
 public class FileBackedTaskManager extends InMemoryTaskManager implements TaskManager {
     private final File file;
@@ -36,35 +38,79 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
         }
     }
 
+    public static Task fromString(String value) {
+        String[] fields = value.split(",");
+        TaskType taskType = TaskType.valueOf(fields[1]);
+
+        switch (taskType) {
+            case TASK:
+                return parseTask(fields);
+            case SUBTASK:
+                return parseSubtask(fields);
+            case EPIC:
+                return parseEpic(fields);
+            default:
+                throw new IllegalArgumentException("Unknown task type: " + taskType);
+        }
+    }
+
+    private static Task parseTask(String[] fields) {
+        int id = Integer.parseInt(fields[0]);
+        String name = fields[2];
+        Status status = Status.valueOf(fields[3]);
+        String description = fields[4];
+        long durationMinutes = Long.parseLong(fields[5]);
+        Duration duration = Duration.ofMinutes(durationMinutes);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(Task.getFormat());
+        LocalDateTime startTime = LocalDateTime.parse(fields[6], formatter);
+        return new Task(name, description, id, status, duration, startTime);
+    }
+
+    private static Subtask parseSubtask(String[] fields) {
+        int id = Integer.parseInt(fields[0]);
+        String name = fields[2];
+        Status status = Status.valueOf(fields[3]);
+        String description = fields[4];
+        int epicId = Integer.parseInt(fields[5]);
+        long durationMinutes = Long.parseLong(fields[6]);
+        Duration duration = Duration.ofMinutes(durationMinutes);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(Task.getFormat());
+        LocalDateTime startTime = LocalDateTime.parse(fields[7], formatter);
+        return new Subtask(id, name, description, status, epicId, duration, startTime);
+    }
+
+    private static Epic parseEpic(String[] fields) {
+        int id = Integer.parseInt(fields[0]);
+        String name = fields[2];
+        Status status = Status.valueOf(fields[3]);
+        String description = fields[4];
+        Epic epic = new Epic(name, description);
+        epic.setId(id);
+        epic.setStatus(status);
+        return epic;
+    }
+
+
     public static FileBackedTaskManager loadFromFile(File file) {
         FileBackedTaskManager manager = new FileBackedTaskManager(file);
         try {
             List<String> lines = Files.readAllLines(file.toPath());
             for (String line : lines.subList(1, lines.size())) {
-                String[] fields = line.split(",");
-                TaskType taskType = TaskType.valueOf(fields[1]);
-                switch (taskType) {
-                    case TASK:
-                        Task task = Task.fromString(line);
-                        manager.addTask(task);
-                        break;
-                    case EPIC:
-                        Epic epic = Epic.fromString(line);
-                        manager.addEpic(epic);
-                        break;
-                    case SUBTASK:
-                        Subtask subtask = Subtask.fromString(line);
-                        manager.addSubtask(subtask);
-                        break;
-                    default:
-                        throw new IllegalArgumentException(String.format("Неизвестный тип задачи: %s", taskType));
+                Task task = fromString(line);
+                if (task instanceof Subtask) {
+                    manager.addSubtask((Subtask) task);
+                } else if (task instanceof Epic) {
+                    manager.addEpic((Epic) task);
+                } else {
+                    manager.addTask(task);
                 }
             }
         } catch (IOException e) {
-            throw new ManagerSaveException(String.format("Ошибка при сохранении данных в файл: %s", file.getName()));
+            throw new ManagerSaveException(String.format("Error loading data from file: %s", file.getName()));
         }
         return manager;
     }
+
 
     @Override
     public Task addTask(Task task) {
@@ -109,44 +155,38 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
     }
 
     @Override
-    public Map<Integer, Task> deleteTask(int id) {
-        Map<Integer, Task> tasks = super.deleteTask(id);
+    public void deleteTask(int id) {
+        super.deleteTask(id);
         save();
-        return tasks;
     }
 
     @Override
-    public Map<Integer, Epic> deleteEpic(int id) {
-        Map<Integer, Epic> epics = super.deleteEpic(id);
+    public void deleteEpic(int id) {
+        super.deleteEpic(id);
         save();
-        return epics;
     }
 
     @Override
-    public Map<Integer, Subtask> deleteSubtask(int id) {
-        Map<Integer, Subtask> subtasks = super.deleteSubtask(id);
+    public void deleteSubtask(int id) {
+        super.deleteSubtask(id);
         save();
-        return subtasks;
     }
 
     @Override
-    public Map<Integer, Task> clearTasks() {
+    public void clearTasks() {
         super.clearTasks();
         save();
-        return tasksMap;
     }
 
     @Override
-    public Map<Integer, Subtask> clearSubtasks() {
+    public void clearSubtasks() {
         super.clearSubtasks();
         save();
-        return subtasksMap;
     }
 
     @Override
-    public Map<Integer, Epic> clearEpics() {
+    public void clearEpics() {
         super.clearEpics();
         save();
-        return epicsMap;
     }
 }
