@@ -53,6 +53,10 @@ public class Main {
                 case "3":
                     inMemoryTaskManager.clearTasks();
                     System.out.println("Все задачи удалены.");
+                    System.out.println(inMemoryTaskManager.printTasks().values());
+                    break;
+                case "3":
+                    System.out.println(inMemoryTaskManager.clearTasks());
                     break;
                 case "4":
                     System.out.println(inMemoryTaskManager.getTask(1));
@@ -70,17 +74,25 @@ public class Main {
                 case "6":
                     inMemoryTaskManager.deleteTask(1);
                     System.out.println("Задача удалена.");
+                    System.out.println(inMemoryTaskManager.updateTask(task3));
+                    break;
+                case "6":
+                    System.out.println(inMemoryTaskManager.deleteTask(1));
                     break;
                 case "7":
                     inMemoryTaskManager.addEpic(epic1);
                     inMemoryTaskManager.addEpic(epic2);
                     break;
                 case "8":
-                    System.out.println(inMemoryTaskManager.getEpics().values());  // Changed from printEpics()
+                    System.out.println(inMemoryTaskManager.getEpics().values());
                     break;
                 case "9":
                     inMemoryTaskManager.clearEpics();
                     System.out.println("Все эпики удалены.");
+                    System.out.println(inMemoryTaskManager.printEpics().values());
+                    break;
+                case "9":
+                    System.out.println(inMemoryTaskManager.clearEpics());
                     break;
                 case "10":
                     System.out.println(inMemoryTaskManager.getEpic(3));
@@ -95,6 +107,12 @@ public class Main {
                 case "12":
                     inMemoryTaskManager.deleteEpic(3);
                     System.out.println("Эпик удален.");
+                            "Сделать часть  нового проекта Волга",
+                            epic1.getId());
+                    System.out.println(inMemoryTaskManager.updateEpic(epic3));
+                    break;
+                case "12":
+                    System.out.println(inMemoryTaskManager.deleteEpic(3));
                     break;
                 case "13":
                     inMemoryTaskManager.addSubtask(subtask11);
@@ -102,7 +120,7 @@ public class Main {
                     inMemoryTaskManager.addSubtask(subtask21);
                     break;
                 case "14":
-                    System.out.println(inMemoryTaskManager.getSubtasks().values());  // Changed from printSubtasks()
+                    System.out.println(inMemoryTaskManager.getSubtasks().values());
                     break;
                 case "15":
                     inMemoryTaskManager.clearSubtasks();
@@ -110,6 +128,13 @@ public class Main {
                     break;
                 case "16":
                     System.out.println(inMemoryTaskManager.getSubtaskById(5));
+                    System.out.println(inMemoryTaskManager.printSubtasks().values());
+                    break;
+                case "15":
+                    System.out.println(inMemoryTaskManager.clearSubtasks());
+                    break;
+                case "16":
+                    System.out.println(inMemoryTaskManager.getSubtask(5));
                     break;
                 case "17":
                     Subtask subtask13 = new Subtask(subtask11.getId(),
@@ -127,8 +152,16 @@ public class Main {
                     System.out.println("Подзадача удалена.");
                     break;
                 case "19":
-                    System.out.println(inMemoryTaskManager.getSubtasksOfEpic(epic1));  // Changed from printSubtasksOfEpic()
-                    System.out.println(inMemoryTaskManager.getSubtasksOfEpic(epic2));  // Changed from printSubtasksOfEpic()
+                    System.out.println(inMemoryTaskManager.getSubtasksOfEpic(epic1));
+                    System.out.println(inMemoryTaskManager.getSubtasksOfEpic(epic2));
+                    System.out.println(inMemoryTaskManager.updateSubtask(subtask13));
+                    break;
+                case "18":
+                    System.out.println(inMemoryTaskManager.deleteSubtask(5));
+                    break;
+                case "19":
+                    System.out.println(inMemoryTaskManager.printSubtusksOfEpic(epic1));
+                    System.out.println(inMemoryTaskManager.printSubtusksOfEpic(epic2));
                     break;
                 case "20":
                     System.out.println(inMemoryTaskManager.getHistory());
@@ -165,3 +198,4 @@ public class Main {
         System.out.println("21 - Выход");
     }
 }
+
