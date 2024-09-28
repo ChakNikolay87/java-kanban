@@ -98,12 +98,9 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
 
             for (String line : lines.subList(1, lines.size())) {
                 Task task = fromString(line);
-                if (task instanceof Subtask) {
-                    continue;
-                }
                 if (task instanceof Epic) {
                     manager.addEpic((Epic) task);
-                } else {
+                } else if (!(task instanceof Subtask)) {
                     manager.addTask(task);
                 }
             }
@@ -114,12 +111,12 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
                     manager.addSubtask((Subtask) task);
                 }
             }
+
         } catch (IOException e) {
             throw new ManagerSaveException(String.format("Error loading data from file: %s", file.getName()));
         }
         return manager;
     }
-
 
 
 
