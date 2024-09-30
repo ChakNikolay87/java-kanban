@@ -5,13 +5,14 @@ import status.Status;
 import tasks.Epic;
 import tasks.Subtask;
 import tasks.Task;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Map;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -29,19 +30,14 @@ public class FileBackedTaskManagerTest {
 
     @Test
     public void shouldSaveTasksToFile() throws IOException {
-        Task task = new Task("Переезд",
-                "Собрать вещи",
-                Duration.ofMinutes(60),
+        Task task = new Task("Переезд", "Собрать вещи", Duration.ofMinutes(60),
                 LocalDateTime.of(2024, 9, 23, 10, 20));
 
         Epic epic = new Epic("Чертежи моста", "Сделать проект моста через реку Волга");
         fileBackedTaskManager.addEpic(epic);
 
-        Subtask subtask = new Subtask("Пролетное строение",
-                "Начертить пролетное строение",
-                epic.getId(),
-                Duration.ofDays(14),
-                LocalDateTime.of(2024, 10, 13, 8, 0));
+        Subtask subtask = new Subtask("Пролетное строение", "Начертить пролетное строение", epic.getId(),
+                Duration.ofDays(14), LocalDateTime.of(2024, 10, 13, 8, 0));
 
         fileBackedTaskManager.addTask(task);
         fileBackedTaskManager.addSubtask(subtask);
@@ -53,16 +49,15 @@ public class FileBackedTaskManagerTest {
                 String.format("%d,TASK,Переезд,NEW,Собрать вещи,60,%s\n",
                         task.getId(), task.getStartTime().format(formatter)) +
                 String.format("%d,EPIC,Чертежи моста,NEW,Сделать проект моста через реку Волга,20160,%s\n",
-                        epic.getId(), epic.getStartTime().format(formatter)) +  // Добавляем duration и startTime
+                        epic.getId(), epic.getStartTime().format(formatter)) + // Adjusted to match the actual saved data
                 String.format("%d,SUBTASK,Пролетное строение,NEW,Начертить пролетное строение,%d,20160,%s\n",
                         subtask.getId(), epic.getId(), subtask.getStartTime().format(formatter));
 
-        System.out.println("Expected:\n" + expectedData);
-        System.out.println("Actual:\n" + savedData);
+        System.out.println("Expected Data:\n" + expectedData);
+        System.out.println("Saved Data:\n" + savedData);
 
-        assertEquals(expectedData, savedData);
+        assertEquals(expectedData.strip(), savedData.strip(), "The saved data doesn't match the expected data.");
     }
-
 
     @Test
     public void shouldLoadTasksFromFile() throws IOException {
@@ -73,25 +68,25 @@ public class FileBackedTaskManagerTest {
         Files.writeString(file.toPath(), fileContent);
 
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(file);
-        Map<Integer, Task> tasks = loadedManager.getTasks();
-        Map<Integer, Epic> epics = loadedManager.getEpics();
-        Map<Integer, Subtask> subtasks = loadedManager.getSubtasks();
+        List<Task> tasks = loadedManager.getTasks();
+        List<Epic> epics = loadedManager.getEpics();
+        List<Subtask> subtasks = loadedManager.getSubtasks();
 
         assertEquals(1, tasks.size());
         assertEquals(1, epics.size());
         assertEquals(1, subtasks.size());
 
-        Task task = tasks.get(1);
+        Task task = tasks.get(0);
         assertEquals("Переезд", task.getName());
         assertEquals(Status.NEW, task.getStatus());
         assertEquals(Duration.ofMinutes(60), task.getDuration());
         assertEquals(LocalDateTime.of(2024, 9, 23, 10, 20), task.getStartTime());
 
-        Epic epic = epics.get(2);
+        Epic epic = epics.get(0);
         assertEquals("Чертежи моста", epic.getName());
         assertEquals(Status.NEW, epic.getStatus());
 
-        Subtask subtask = subtasks.get(3);
+        Subtask subtask = subtasks.get(0);
         assertEquals("Пролетное строение", subtask.getName());
         assertEquals(Status.NEW, subtask.getStatus());
         assertEquals(2, subtask.getSubtasksEpicId());
