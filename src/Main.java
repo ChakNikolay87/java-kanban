@@ -11,6 +11,7 @@ import java.util.Scanner;
 public class Main {
 
     static Scanner scanner;
+    
     public static void main(String[] args) {
         TaskManager taskManager = Managers.getDefault();
         Task task1 = new Task("Переезд", "Собрать вещи", Duration.ofMinutes(60),
