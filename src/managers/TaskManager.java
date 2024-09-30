@@ -3,7 +3,6 @@ package managers;
 import tasks.Epic;
 import tasks.Subtask;
 import tasks.Task;
-import java.util.Map;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,11 +43,11 @@ public interface TaskManager {
     Optional<Subtask> getSubtaskById(int id);
 
 
-    Map<Integer, Task> getTasks();
+    List<Task> getTasks();
 
-    Map<Integer, Epic> getEpics();
+    List<Epic> getEpics();
 
-    Map<Integer, Subtask> getSubtasks();
+    List<Subtask> getSubtasks();
 
 
     List<Subtask> getSubtasksOfEpic(Epic epic);
