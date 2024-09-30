@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.util.Scanner;
 
 public class Main {
-    
+
     static Scanner scanner;
     public static void main(String[] args) {
         TaskManager taskManager = Managers.getDefault();
