@@ -7,7 +7,7 @@ import tasks.Task;
 import java.util.*;
 
 public class InMemoryTaskManager implements TaskManager {
-    HistoryManager inMemoryHistoryManager = Managers.getDefaultHistory();
+    private final HistoryManager inMemoryHistoryManager = Managers.getDefaultHistory();
     private static int nextId = 1;
     protected final Map<Integer, Task> tasksMap = new HashMap<>();
     protected final Map<Integer, Epic> epicsMap = new HashMap<>();
@@ -54,11 +54,79 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Task updateTask(Task taskToReplace) {
+        // Проверяем, существует ли задача с таким ID
         if (tasksMap.containsKey(taskToReplace.getId())) {
+            // Получаем текущую версию задачи
+            Task existingTask = tasksMap.get(taskToReplace.getId());
+
+            // Временно удаляем задачу из набора приоритетных задач,
+            // чтобы предотвратить конфликт при проверке на пересечение со временем самой себя
+            prioritizedTasks.remove(existingTask);
+
+            // Проверяем, пересекается ли обновляемая задача по времени с другими задачами
+            if (isOverlapping(taskToReplace)) {
+                // Если время пересекается, возвращаем оригинальную задачу в набор приоритетных задач
+                prioritizedTasks.add(existingTask);
+                // Выбрасываем исключение с описанием конфликта времени
+                throw new IllegalArgumentException("Task time conflicts with existing tasks.");
+            }
+
+            // Если конфликтов нет, обновляем задачу в карте задач
             tasksMap.replace(taskToReplace.getId(), taskToReplace);
+            // Добавляем обновлённую задачу обратно в набор приоритетных задач
+            prioritizedTasks.add(taskToReplace);
         }
+        // Возвращаем обновлённую задачу
         return taskToReplace;
     }
+
+
+
+
+    @Override
+    public Subtask updateSubtask(Subtask subtaskToReplace) {
+        // Получаем ID обновляемой подзадачи
+        var updatingSubtaskId = subtaskToReplace.getId();
+
+        // Проверяем, существует ли подзадача с таким ID
+        if (!subtasksMap.containsKey(updatingSubtaskId)) {
+            // Если нет, выбрасываем исключение
+            throw new IllegalArgumentException("Subtask by id=%s not found".formatted(updatingSubtaskId));
+        }
+
+        // Получаем текущую версию подзадачи
+        Subtask existingSubtask = subtasksMap.get(updatingSubtaskId);
+
+        // Временно удаляем подзадачу из набора приоритетных задач
+        prioritizedTasks.remove(existingSubtask);
+
+        // Проверяем, пересекается ли обновляемая подзадача по времени с другими задачами
+        if (isOverlapping(subtaskToReplace)) {
+            // Если пересекается, возвращаем оригинальную подзадачу обратно в набор
+            prioritizedTasks.add(existingSubtask);
+            // Выбрасываем исключение с описанием конфликта времени
+            throw new IllegalArgumentException("Subtask time conflicts with existing tasks.");
+        }
+
+        // Обновляем подзадачу в карте подзадач
+        subtasksMap.replace(updatingSubtaskId, subtaskToReplace);
+
+        // Получаем эпик, к которому принадлежит подзадача
+        var epic = epicsMap.get(subtaskToReplace.getSubtasksEpicId());
+
+        // Если эпик существует, обновляем в нём информацию о подзадаче
+        if (epic != null) {
+            epic.updateSubtask(subtaskToReplace);
+        }
+
+        // Добавляем обновлённую подзадачу обратно в набор приоритетных задач
+        prioritizedTasks.add(subtaskToReplace);
+
+        // Возвращаем обновлённую подзадачу
+        return subtaskToReplace;
+    }
+
+
 
     @Override
     public Epic updateEpic(Epic epicToReplace) {
@@ -71,23 +139,6 @@ public class InMemoryTaskManager implements TaskManager {
             epicToReplace.updateEpicTime();
         }
         return epicToReplace;
-    }
-
-    @Override
-    public Subtask updateSubtask(Subtask subtaskToReplace) {
-        var updatingSubtaskId = subtaskToReplace.getId();
-        if (!subtasksMap.containsKey(updatingSubtaskId)) {
-            throw new IllegalArgumentException("Subtask by id=%s not found".formatted(updatingSubtaskId));
-        }
-
-        subtasksMap.replace(updatingSubtaskId, subtaskToReplace);
-
-        var epic = epicsMap.get(subtaskToReplace.getSubtasksEpicId());
-        if (epic != null) {
-            epic.updateSubtask(subtaskToReplace);
-        }
-
-        return subtaskToReplace;
     }
 
     @Override
@@ -183,18 +234,18 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Map<Integer, Task> getTasks() {
-        return tasksMap;
+    public List<Task> getTasks() {
+        return new ArrayList<>(tasksMap.values());
     }
 
     @Override
-    public Map<Integer, Epic> getEpics() {
-        return epicsMap;
+    public List<Epic> getEpics() {
+        return new ArrayList<>(epicsMap.values());
     }
 
     @Override
-    public Map<Integer, Subtask> getSubtasks() {
-        return subtasksMap;
+    public List<Subtask> getSubtasks() {
+        return new ArrayList<>(subtasksMap.values());
     }
 
     @Override
@@ -206,6 +257,8 @@ public class InMemoryTaskManager implements TaskManager {
     public List<Task> getHistory() {
         return inMemoryHistoryManager.getHistory();
     }
+
+
 
     public void setNextId(int nextId) {
         InMemoryTaskManager.nextId = nextId;
