@@ -89,7 +89,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
         epic.setStatus(status);
         return epic;
     }
-    
+
     public static FileBackedTaskManager loadFromFile(File file) {
         FileBackedTaskManager manager = new FileBackedTaskManager(file);
         try {
