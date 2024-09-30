@@ -13,35 +13,22 @@ public class Main {
     static Scanner scanner;
 
     public static void main(String[] args) {
-        TaskManager inMemoryTaskManager = Managers.getDefault();
+        TaskManager taskManager = Managers.getDefault();
 
-        Task task1 = new Task("Переезд",
-                "Собрать вещи",
-                Duration.ofMinutes(60),
+        Task task1 = new Task("Переезд", "Собрать вещи", Duration.ofMinutes(60),
                 LocalDateTime.of(2024, 9, 23, 10, 20));
-        Task task2 = new Task("Стрижка",
-                "Сходить в барбершоп",
-                Duration.ofHours(3),
+        Task task2 = new Task("Стрижка", "Сходить в барбершоп", Duration.ofHours(3),
                 LocalDateTime.of(2024, 9, 24, 17, 0));
 
         Epic epic1 = new Epic("Чертежи моста", "Сделать проект моста через реку Волга");
         Epic epic2 = new Epic("Командировка", "Подготовиться к командировке");
 
-        Subtask subtask11 = new Subtask("Пролетное строение",
-                "Начертить пролетное строение",
-                3,
-                Duration.ofDays(14),
-                LocalDateTime.of(2024, 10, 13, 8, 0));
-        Subtask subtask12 = new Subtask("Опоры",
-                "Начертить опоры",
-                3,
-                Duration.ofDays(8),
-                LocalDateTime.of(2024, 10, 28, 8, 0));
-        Subtask subtask21 = new Subtask("Билеты на самолет",
-                "Купить билеты на самолет",
-                4,
-                Duration.ofMinutes(10),
-                LocalDateTime.of(2024, 11, 25, 14, 5));
+        Subtask subtask11 = new Subtask("Пролетное строение", "Начертить пролетное строение", 3,
+                Duration.ofDays(14), LocalDateTime.of(2024, 10, 13, 8, 0));
+        Subtask subtask12 = new Subtask("Опоры", "Начертить опоры", 3,
+                Duration.ofDays(8), LocalDateTime.of(2024, 10, 28, 8, 0));
+        Subtask subtask21 = new Subtask("Билеты на самолет", "Купить билеты на самолет", 4,
+                Duration.ofMinutes(10), LocalDateTime.of(2024, 11, 25, 14, 5));
 
         scanner = new Scanner(System.in);
 
@@ -51,102 +38,96 @@ public class Main {
 
             switch (command) {
                 case "1":
-                    inMemoryTaskManager.addTask(task1);
-                    inMemoryTaskManager.addTask(task2);
+                    taskManager.addTask(task1);
+                    taskManager.addTask(task2);
+                    System.out.println("Задачи добавлены.");
                     break;
                 case "2":
-                    System.out.println(inMemoryTaskManager.getTasks().values());
+                    System.out.println(taskManager.getTasks());
                     break;
                 case "3":
-                    inMemoryTaskManager.clearTasks();
+                    taskManager.clearTasks();
                     System.out.println("Все задачи удалены.");
-                    System.out.println(inMemoryTaskManager.getTasks().values());
                     break;
                 case "4":
-                    System.out.println(inMemoryTaskManager.getTask(1));
+                    System.out.println(taskManager.getTask(task1.getId()).orElse(null));
                     break;
                 case "5":
-                    Task task3 = new Task("Переезд продолжение",
-                            "Собрать оставшиеся вещи",
-                            task1.getId(),
-                            Status.DONE,
-                            Duration.ofMinutes(60),
+                    Task updatedTask = new Task("Переезд продолжение", "Собрать оставшиеся вещи",
+                            task1.getId(), Status.DONE, Duration.ofMinutes(60),
                             LocalDateTime.of(2024, 9, 23, 10, 20));
-                    inMemoryTaskManager.updateTask(task3);
+                    taskManager.updateTask(updatedTask);
                     System.out.println("Задача обновлена.");
                     break;
                 case "6":
-                    inMemoryTaskManager.deleteTask(1);
+                    taskManager.deleteTask(task1.getId());
                     System.out.println("Задача удалена.");
                     break;
                 case "7":
-                    inMemoryTaskManager.addEpic(epic1);
-                    inMemoryTaskManager.addEpic(epic2);
+                    taskManager.addEpic(epic1);
+                    taskManager.addEpic(epic2);
+                    System.out.println("Эпики добавлены.");
                     break;
                 case "8":
-                    System.out.println(inMemoryTaskManager.getEpics().values());
+                    System.out.println(taskManager.getEpics());
                     break;
                 case "9":
-                    inMemoryTaskManager.clearEpics();
+                    taskManager.clearEpics();
                     System.out.println("Все эпики удалены.");
                     break;
                 case "10":
-                    System.out.println(inMemoryTaskManager.getEpic(3));
+                    System.out.println(taskManager.getEpic(epic1.getId()).orElse(null));
                     break;
                 case "11":
-                    Epic epic3 = new Epic("Чертежи нового арочного моста",
-                            "Сделать часть нового проекта Волга",
-                            epic1.getId());
-                    inMemoryTaskManager.updateEpic(epic3);
+                    Epic updatedEpic = new Epic("Чертежи нового арочного моста",
+                            "Сделать часть нового проекта Волга", epic1.getId());
+                    taskManager.updateEpic(updatedEpic);
                     System.out.println("Эпик обновлен.");
                     break;
                 case "12":
-                    inMemoryTaskManager.deleteEpic(3);
+                    taskManager.deleteEpic(epic1.getId());
                     System.out.println("Эпик удален.");
                     break;
                 case "13":
-                    inMemoryTaskManager.addSubtask(subtask11);
-                    inMemoryTaskManager.addSubtask(subtask12);
-                    inMemoryTaskManager.addSubtask(subtask21);
+                    taskManager.addSubtask(subtask11);
+                    taskManager.addSubtask(subtask12);
+                    taskManager.addSubtask(subtask21);
+                    System.out.println("Подзадачи добавлены.");
                     break;
                 case "14":
-                    System.out.println(inMemoryTaskManager.getSubtasks().values());
+                    System.out.println(taskManager.getSubtasks());
                     break;
                 case "15":
-                    inMemoryTaskManager.clearSubtasks();
+                    taskManager.clearSubtasks();
                     System.out.println("Все подзадачи удалены.");
                     break;
                 case "16":
-                    System.out.println(inMemoryTaskManager.getSubtaskById(5));
+                    System.out.println(taskManager.getSubtaskById(subtask11.getId()).orElse(null));
                     break;
                 case "17":
-                    Subtask subtask13 = new Subtask(subtask11.getId(),
-                            "Пролетное строение",
-                            "Начертить пролетное строение",
-                            Status.INPROGRESS,
-                            subtask11.getSubtasksEpicId(),
-                            subtask11.getDuration(),
+                    Subtask updatedSubtask = new Subtask(subtask11.getId(), "Пролетное строение",
+                            "Начертить пролетное строение", Status.INPROGRESS,
+                            subtask11.getSubtasksEpicId(), subtask11.getDuration(),
                             subtask11.getStartTime());
-                    inMemoryTaskManager.updateSubtask(subtask13);
+                    taskManager.updateSubtask(updatedSubtask);
                     System.out.println("Подзадача обновлена.");
                     break;
                 case "18":
-                    inMemoryTaskManager.deleteSubtask(5);
+                    taskManager.deleteSubtask(subtask11.getId());
                     System.out.println("Подзадача удалена.");
                     break;
                 case "19":
-                    System.out.println(inMemoryTaskManager.getSubtasksOfEpic(epic1));
-                    System.out.println(inMemoryTaskManager.getSubtasksOfEpic(epic2));
+                    System.out.println(taskManager.getSubtasksOfEpic(epic1));
+                    System.out.println(taskManager.getSubtasksOfEpic(epic2));
                     break;
                 case "20":
-                    System.out.println(inMemoryTaskManager.getHistory());
+                    System.out.println(taskManager.getHistory());
                     break;
                 case "21":
                     System.out.println("Выход");
                     return;
                 default:
                     System.out.println("Неверная команда. Попробуйте еще раз.");
-                    break;
             }
         }
     }
