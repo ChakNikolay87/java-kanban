@@ -4,6 +4,7 @@ import status.Status;
 import tasks.Epic;
 import tasks.Subtask;
 import tasks.Task;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -89,8 +90,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
         epic.setStatus(status);
         return epic;
     }
-
-
+    
     public static FileBackedTaskManager loadFromFile(File file) {
         FileBackedTaskManager manager = new FileBackedTaskManager(file);
         try {
@@ -117,8 +117,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
         }
         return manager;
     }
-    
-    
+
     @Override
     public Task addTask(Task task) {
         Task newTask = super.addTask(task);
