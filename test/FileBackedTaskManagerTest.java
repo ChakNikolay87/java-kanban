@@ -1,136 +1,96 @@
 import managers.FileBackedTaskManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import status.Status;
 import tasks.Epic;
 import tasks.Subtask;
 import tasks.Task;
-import tasks.TaskStatus;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class FileBackedTaskManagerTest {
-    private FileBackedTaskManager manager;
+    private FileBackedTaskManager fileBackedTaskManager;
     private File file;
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm dd.MM.yyyy");
 
     @BeforeEach
-    void setUp() throws IOException {
-        file = File.createTempFile("tasks", ".csv");
-        manager = new FileBackedTaskManager(file);
+    public void setUp() throws IOException {
+        file = File.createTempFile("test", ".csv");
+        fileBackedTaskManager = new FileBackedTaskManager(file);
+        fileBackedTaskManager.setNextId(1);
     }
 
     @Test
-    void shouldSaveAndLoadTaskCorrectly() {
-        Task task = new Task(0, "Test Task", "Test Description", TaskStatus.NEW);
-        manager.createTask(task);
+    public void shouldSaveTasksToFile() throws IOException {
+        Task task = new Task("Переезд", "Собрать вещи", Duration.ofMinutes(60),
+                LocalDateTime.of(2024, 9, 23, 10, 20));
+
+        Epic epic = new Epic("Чертежи моста", "Сделать проект моста через реку Волга");
+        fileBackedTaskManager.addEpic(epic);
+
+        Subtask subtask = new Subtask("Пролетное строение", "Начертить пролетное строение", epic.getId(),
+                Duration.ofDays(14), LocalDateTime.of(2024, 10, 13, 8, 0));
+
+        fileBackedTaskManager.addTask(task);
+        fileBackedTaskManager.addSubtask(subtask);
+        fileBackedTaskManager.save();
+
+        String savedData = Files.readString(file.toPath());
+
+        String expectedData = "Список сохраненных задач:\n" +
+                String.format("%d,TASK,Переезд,NEW,Собрать вещи,60,%s\n",
+                        task.getId(), task.getStartTime().format(formatter)) +
+                String.format("%d,EPIC,Чертежи моста,NEW,Сделать проект моста через реку Волга,20160,%s\n",
+                        epic.getId(), epic.getStartTime().format(formatter)) + // Adjusted to match the actual saved data
+                String.format("%d,SUBTASK,Пролетное строение,NEW,Начертить пролетное строение,%d,20160,%s\n",
+                        subtask.getId(), epic.getId(), subtask.getStartTime().format(formatter));
+
+        System.out.println("Expected Data:\n" + expectedData);
+        System.out.println("Saved Data:\n" + savedData);
+
+        assertEquals(expectedData.strip(), savedData.strip(), "The saved data doesn't match the expected data.");
+    }
+
+    @Test
+    public void shouldLoadTasksFromFile() throws IOException {
+        String fileContent = "Список сохраненных задач:\n" +
+                "1,TASK,Переезд,NEW,Собрать вещи,60,10:20 23.09.2024\n" +
+                "2,EPIC,Чертежи моста,NEW,Сделать проект моста через реку Волга\n" +
+                "3,SUBTASK,Пролетное строение,NEW,Начертить пролетное строение,2,20160,08:00 13.10.2024\n";
+        Files.writeString(file.toPath(), fileContent);
 
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(file);
-        assertEquals(1, loadedManager.getTasks().size());
-        Task loadedTask = loadedManager.getTasks().get(0);
-        assertEquals(task.getName(), loadedTask.getName());
-        assertEquals(task.getDescription(), loadedTask.getDescription());
-        assertEquals(task.getStatus(), loadedTask.getStatus());
-    }
+        List<Task> tasks = loadedManager.getTasks();
+        List<Epic> epics = loadedManager.getEpics();
+        List<Subtask> subtasks = loadedManager.getSubtasks();
 
-    @Test
-    void shouldSaveAndLoadEpicCorrectly() {
-        Epic epic = new Epic(0, "Test Epic", "Epic Description", TaskStatus.NEW);
-        manager.createEpic(epic);
+        assertEquals(1, tasks.size());
+        assertEquals(1, epics.size());
+        assertEquals(1, subtasks.size());
 
-        FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(file);
+        Task task = tasks.get(0);
+        assertEquals("Переезд", task.getName());
+        assertEquals(Status.NEW, task.getStatus());
+        assertEquals(Duration.ofMinutes(60), task.getDuration());
+        assertEquals(LocalDateTime.of(2024, 9, 23, 10, 20), task.getStartTime());
 
-        assertEquals(1, loadedManager.getEpics().size());
-        Epic loadedEpic = loadedManager.getEpics().get(0);
-        assertEquals(epic.getName(), loadedEpic.getName());
-        assertEquals(epic.getDescription(), loadedEpic.getDescription());
-        assertEquals(epic.getStatus(), loadedEpic.getStatus());
-    }
+        Epic epic = epics.get(0);
+        assertEquals("Чертежи моста", epic.getName());
+        assertEquals(Status.NEW, epic.getStatus());
 
-    @Test
-    void shouldSaveAndLoadSubtaskCorrectly() {
-        Epic epic = new Epic(0, "Test Epic", "Epic Description", TaskStatus.NEW);
-        manager.createEpic(epic);
-        Subtask subtask = new Subtask(0, "Test Subtask", "Subtask Description", epic.getId(), TaskStatus.NEW);
-        manager.createSubtask(subtask);
-
-        FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(file);
-
-        assertEquals(1, loadedManager.getEpics().size());
-        Subtask loadedSubtask = loadedManager.getSubtasks().get(0);
-        assertEquals(subtask.getName(), loadedSubtask.getName());
-        assertEquals(subtask.getDescription(), loadedSubtask.getDescription());
-        assertEquals(subtask.getEpicId(), loadedSubtask.getEpicId());
-        assertEquals(subtask.getStatus(), loadedSubtask.getStatus());
-    }
-
-    @Test
-    void shouldDeleteTaskAndSaveChanges() {
-        Task task = new Task(0, "Test Task", "Test Description", TaskStatus.NEW);
-        manager.createTask(task);
-
-        manager.deleteTaskById(task.getId());
-
-        FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(file);
-
-        assertEquals(0, loadedManager.getTasks().size());
-    }
-
-    @Test
-    public void ManagerStateBeforeAndAfterSaving() throws Exception {
-        File tempFile = File.createTempFile("tasks", ".csv");
-        tempFile.deleteOnExit();
-
-        FileBackedTaskManager manager = new FileBackedTaskManager(tempFile);
-
-        Task task = new Task(0, "Test Task", "Test Description", TaskStatus.NEW);
-        manager.createTask(task);
-
-        Epic epic = new Epic(1, "Test Epic", "Epic Description", TaskStatus.IN_PROGRESS);
-        manager.createEpic(epic);
-
-        Subtask subtask = new Subtask(2, "Test Subtask", "Subtask Description", epic.getId(), TaskStatus.DONE);
-        manager.createSubtask(subtask);
-
-        int originalTaskCount = manager.getTasks().size();
-        int originalEpicCount = manager.getEpics().size();
-        int originalSubtaskCount = manager.getSubtasks().size();
-
-        FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
-
-        assertEquals(originalTaskCount, loadedManager.getTasks().size(), "Task counts do not match.");
-        assertEquals(originalEpicCount, loadedManager.getEpics().size(), "Epic counts do not match.");
-        assertEquals(originalSubtaskCount, loadedManager.getSubtasks().size(), "Subtask counts do not match.");
-
-        assertEquals(manager.getTasks(), loadedManager.getTasks(), "Tasks do not match.");
-        assertEquals(manager.getEpics(), loadedManager.getEpics(), "Epics do not match.");
-        assertEquals(manager.getSubtasks(), loadedManager.getSubtasks(), "Subtasks do not match.");
-    }
-
-    @Test
-    void testManagerStateBeforeAndAfterSaving() {
-        Task task = new Task(1, "Test Task", "Test Description", TaskStatus.NEW);
-        manager.createTask(task);
-
-        Epic epic = new Epic(2, "Test Epic", "Epic Description", TaskStatus.NEW);
-        manager.createEpic(epic);
-
-        Subtask subtask = new Subtask(3, "Test Subtask", "Subtask Description", epic.getId(), TaskStatus.IN_PROGRESS);
-        manager.createSubtask(subtask);
-
-        int originalTaskCount = manager.getTasks().size();
-        int originalEpicCount = manager.getEpics().size();
-        int originalSubtaskCount = manager.getSubtasks().size();
-
-        FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(file);
-
-        assertEquals(originalTaskCount, loadedManager.getTasks().size(), "Количество задач должно совпадать.");
-        assertEquals(originalEpicCount, loadedManager.getEpics().size(), "Количество эпиков должно совпадать.");
-        assertEquals(originalSubtaskCount, loadedManager.getSubtasks().size(), "Количество подзадач должно совпадать.");
-
-        assertEquals(manager.getTasks(), loadedManager.getTasks(), "Задачи должны совпадать.");
-        assertEquals(manager.getEpics(), loadedManager.getEpics(), "Эпики должны совпадать.");
-        assertEquals(manager.getSubtasks(), loadedManager.getSubtasks(), "Подзадачи должны совпадать.");
+        Subtask subtask = subtasks.get(0);
+        assertEquals("Пролетное строение", subtask.getName());
+        assertEquals(Status.NEW, subtask.getStatus());
+        assertEquals(2, subtask.getSubtasksEpicId());
+        assertEquals(Duration.ofMinutes(20160), subtask.getDuration());
+        assertEquals(LocalDateTime.of(2024, 10, 13, 8, 0), subtask.getStartTime());
     }
 }

@@ -4,25 +4,22 @@ import tasks.Epic;
 import tasks.Subtask;
 import tasks.Task;
 import status.Status;
-
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Scanner;
 
 public class Main {
+
     static Scanner scanner;
 
     public static void main(String[] args) {
         TaskManager taskManager = Managers.getDefault();
-
         Task task1 = new Task("Переезд", "Собрать вещи", Duration.ofMinutes(60),
                 LocalDateTime.of(2024, 9, 23, 10, 20));
         Task task2 = new Task("Стрижка", "Сходить в барбершоп", Duration.ofHours(3),
                 LocalDateTime.of(2024, 9, 24, 17, 0));
-
         Epic epic1 = new Epic("Чертежи моста", "Сделать проект моста через реку Волга");
         Epic epic2 = new Epic("Командировка", "Подготовиться к командировке");
-
         Subtask subtask11 = new Subtask("Пролетное строение", "Начертить пролетное строение", 3,
                 Duration.ofDays(14), LocalDateTime.of(2024, 10, 13, 8, 0));
         Subtask subtask12 = new Subtask("Опоры", "Начертить опоры", 3,

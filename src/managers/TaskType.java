@@ -1,4 +1,3 @@
-
 package managers;
 
 public enum TaskType {

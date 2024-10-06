@@ -1,101 +1,120 @@
 package tasks;
 
 import managers.TaskType;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import status.Status;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 public class Epic extends Task {
+    private Map<Integer, Subtask> epicSubtasks;
 
-        private final List<Subtask> subtasks;
+    public Epic(String name, String description) {
+        super(name, description);
+        this.epicSubtasks = new HashMap<>();
+    }
 
-        public Epic(int id, String name, String description, TaskStatus status) {
-            super(id, name, description, status);
-            this.subtasks = new ArrayList<>();
-        }
+    public Epic(String name, String description, int id) {
+        super(name, description, id);
+        this.epicSubtasks = new HashMap<>();
+    }
 
-    public List<Subtask> getSubtasks() {
-        return subtasks;
+    public Epic(String name, String description, Status status, int id) {
+        super(name, description, status, id);
+        this.epicSubtasks = new HashMap<>();
+    }
+
+    public Epic(String name, String description, int id, Status status, Duration duration, LocalDateTime startTime) {
+        super(name, description, id, status, duration, startTime);
+        this.epicSubtasks = new HashMap<>();
     }
 
     public void addSubtask(Subtask subtask) {
-        subtasks.add(subtask);
-        updateStatus();
+        epicSubtasks.put(subtask.getId(), subtask);
+        updateEpicStatus();
+        updateEpicTime();
     }
 
-    public void removeSubtask(Subtask subtask) {
-        subtasks.remove(subtask);
-        updateStatus();
+    public void removeSubtask(int subtaskId) {
+        epicSubtasks.remove(subtaskId);
+        updateEpicStatus();
+        updateEpicTime();
     }
 
-    public void updateStatus() {
-        if (subtasks.isEmpty()) {
-            setStatus(TaskStatus.NEW);
-            return;
-        }
+    public List<Subtask> getSubtasks() {
+        return new ArrayList<>(epicSubtasks.values());
+    }
 
-        boolean allDone = true;
-        boolean allNew = true;
+    public void clear() {
+        epicSubtasks.clear();
+        updateEpicStatus();
+        updateEpicTime();
+    }
 
-        for (Subtask subtask : subtasks) {
-            if (subtask.getStatus() != TaskStatus.DONE) {
-                allDone = false;
-            }
-            if (subtask.getStatus() != TaskStatus.NEW) {
-                allNew = false;
-            }
-        }
+    public Optional<Subtask> getSubtaskById(int subtaskId) {
+        return Optional.ofNullable(epicSubtasks.get(subtaskId));
+    }
 
-        if (allDone) {
-            setStatus(TaskStatus.DONE);
-        } else if (allNew) {
-            setStatus(TaskStatus.NEW);
+    public void updateSubtask(Subtask subtask) {
+        if (epicSubtasks.containsKey(subtask.getId())) {
+            epicSubtasks.replace(subtask.getId(), subtask);
+            updateEpicStatus();
+            updateEpicTime();
         } else {
-            setStatus(TaskStatus.IN_PROGRESS);
+            throw new IllegalArgumentException("Subtask with id=%s not found in epic".formatted(subtask.getId()));
         }
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
-        Epic epic = (Epic) o;
-        return Objects.equals(subtasks, epic.subtasks);
+    public void updateEpicTime() {
+        updateStartTime();
+        updateTotalDuration();
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), subtasks);
+    private void updateTotalDuration() {
+        Duration totalDuration = epicSubtasks.values().stream()
+                .map(Subtask::getDuration)
+                .filter(Objects::nonNull)
+                .reduce(Duration.ZERO, Duration::plus);
+        setDuration(totalDuration);
+    }
+
+    private void updateStartTime() {
+        LocalDateTime startTime = epicSubtasks.values().stream()
+                .map(Subtask::getStartTime)
+                .filter(Objects::nonNull)
+                .min(LocalDateTime::compareTo)
+                .orElse(null);
+        setStartTime(startTime);
+    }
+
+    public Status getSubtasksStatus() {
+        if (epicSubtasks.values().stream().anyMatch(subtask -> subtask.getStatus() == Status.INPROGRESS)) {
+            return Status.INPROGRESS;
+        }
+        if (epicSubtasks.values().stream().allMatch(subtask -> subtask.getStatus() == Status.DONE)) {
+            return Status.DONE;
+        }
+        if (epicSubtasks.values().stream().allMatch(subtask -> subtask.getStatus() == Status.NEW)) {
+            return Status.NEW;
+        }
+        return Status.INPROGRESS;
+    }
+
+    private void updateEpicStatus() {
+        setStatus(getSubtasksStatus());
     }
 
     @Override
     public String toString() {
-        return String.format("%s,%s", super.toString(), ""); // Поскольку Epic не имеет epicId
-    }
-
-    @Override
-    public String taskToString() {
-        return String.format("%d,%s,%s,%s,%s", getId(), TaskType.EPIC.name(), getName(), getStatus(), getDescription());
-    }
-
-    public static Epic fromString(String value) {
-        String[] fields = value.split(",");
-        int id = Integer.parseInt(fields[0]);
-        TaskType taskType = TaskType.valueOf(fields[1]);
-        String name = fields[2];
-        TaskStatus status = TaskStatus.valueOf(fields[3]);
-        String description = fields[4];
-
-        if (taskType == TaskType.EPIC) {
-            return new Epic(id, name, description, status);
-        }
-        throw new IllegalArgumentException("Неподдерживаемый тип задачи: %s" + taskType);
-    }
-
-    @Override
-    public String type() {
-        return TaskType.EPIC.name();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+        return String.format("%d,%s,%s,%s,%s,%d,%s",
+                getId(),
+                TaskType.EPIC,
+                getName(),
+                getStatus(),
+                getDescription(),
+                getDuration() != null ? getDuration().toMinutes() : 0,
+                getStartTime() != null ? getStartTime().format(formatter) : "null");
     }
 }
