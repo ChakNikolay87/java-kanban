@@ -263,6 +263,9 @@ public class InMemoryTaskManager implements TaskManager {
         return new ArrayList<>(prioritizedTasks);
     }
 
+    public void resetIdCounter() {
+        InMemoryTaskManager.nextId = 1;
+    }
 
 
     public void setNextId(int nextId) {
