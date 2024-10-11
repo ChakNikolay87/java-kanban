@@ -53,4 +53,8 @@ public interface TaskManager {
     List<Subtask> getSubtasksOfEpic(Epic epic);
 
     List<Task> getHistory();
+
+    List<Task> getPrioritizedTasks();
+
+    void resetIdCounter();
 }
