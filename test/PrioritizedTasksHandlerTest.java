@@ -21,10 +21,11 @@ public class PrioritizedTasksHandlerTest {
     public void setUp() {
         gson = GsonUtil.createGson();
         taskManager = new InMemoryTaskManager();
+        ((InMemoryTaskManager) taskManager).resetIdCounter();
     }
 
     @Test
-    public void getPrioritizedTasksWithTasks() {
+    public void testGetPrioritizedTasksWithTasks() {
         Task task1 = new Task("Task 1", "Description 1", Duration.ofMinutes(60), LocalDateTime.of(2024, 10, 11, 10, 0));
         Task task2 = new Task("Task 2", "Description 2", Duration.ofMinutes(90), LocalDateTime.of(2024, 10, 11, 12, 0));
 
