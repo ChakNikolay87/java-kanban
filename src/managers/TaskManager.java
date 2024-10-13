@@ -7,13 +7,13 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TaskManager {
-  
+
     Task addTask(Task task);
 
     Epic addEpic(Epic epic);
 
     Subtask addSubtask(Subtask subtask);
- 
+
 
     Task updateTask(Task taskToReplace);
 
