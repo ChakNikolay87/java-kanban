@@ -8,8 +8,8 @@ import tasks.Epic;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.Optional;
 import java.util.logging.Logger;
+import java.util.NoSuchElementException;
 
 public class EpicHandler extends BaseHttpHandler {
     private static final Logger logger = Logger.getLogger(EpicHandler.class.getName());
@@ -18,77 +18,74 @@ public class EpicHandler extends BaseHttpHandler {
 
     public EpicHandler(TaskManager taskManager, Gson gson) {
         this.taskManager = taskManager;
-        this.gson = GsonUtil.createGson();
+        this.gson = gson;
     }
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        try {
+        try (exchange) {
             String method = exchange.getRequestMethod();
             String path = exchange.getRequestURI().getPath();
 
             logger.info("Received request: " + method + " " + path);
 
-            switch (method) {
-                case "GET" -> handleGet(exchange);
-                case "POST" -> handlePost(exchange);
-                case "DELETE" -> handleDelete(exchange, path);
-                default -> sendNotFound(exchange);
+            try (exchange) {
+                switch (method) {
+                    case "GET" -> handleGet(exchange);
+                    case "POST" -> handlePost(exchange);
+                    case "DELETE" -> handleDelete(exchange, path);
+                    default -> sendNotFound(exchange);
+                }
+            } catch (Exception e) {
+                logger.severe("Error handling request: " + e.getMessage());
+                sendInternalError(exchange, e.getMessage());
             }
-        } catch (Exception e) {
-            logger.severe("Error handling request: " + e.getMessage());
-            sendInternalError(exchange, e.getMessage());
         }
     }
 
+
     private void handleGet(HttpExchange exchange) throws IOException {
-        // Возвращаем все эпики
         logger.info("Handling GET request for epics");
         sendText(exchange, gson.toJson(taskManager.getEpics()));
         logger.info("Epics sent successfully.");
     }
 
     private void handlePost(HttpExchange exchange) throws IOException {
-        // Чтение тела запроса
         InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8);
         Epic epic = gson.fromJson(isr, Epic.class);
 
-        // Добавление эпика
         logger.info("Handling POST request for creating epic");
         taskManager.addEpic(epic);
         logger.info("Epic created successfully with ID: " + epic.getId());
-        exchange.sendResponseHeaders(201, -1); // Статус 201 Created
+        exchange.sendResponseHeaders(201, -1);
         exchange.close();
     }
 
     private void handleDelete(HttpExchange exchange, String path) throws IOException {
-        // Извлечение ID эпика из пути
-        if (path.startsWith("/epics/")) {
-            String[] pathParts = path.split("/");
-            if (pathParts.length == 3) {
-                try {
-                    int epicId = Integer.parseInt(pathParts[2]);
+        String[] pathParts = path.split("/");
 
-                    // Удаление эпика, если он существует
-                    Optional<Epic> epic = taskManager.getEpic(epicId);
-                    if (epic.isPresent()) {
-                        taskManager.deleteEpic(epicId);
-                        logger.info("Epic deleted successfully: ID " + epicId);
-                        exchange.sendResponseHeaders(200, -1); // Статус 200 OK
-                    } else {
-                        logger.warning("Epic with ID " + epicId + " not found");
-                        sendNotFound(exchange); // Если эпик не найден
-                    }
-                } catch (NumberFormatException e) {
-                    logger.severe("Invalid epic ID format: " + e.getMessage());
-                    sendInternalError(exchange, "Invalid epic ID format");
-                }
-            } else {
-                sendNotFound(exchange);
-            }
-        } else {
+        if (!path.startsWith("/epics/") || pathParts.length != 3) {
             sendNotFound(exchange);
+            return;
         }
+
+        String epicIdStr = pathParts[2];
+
+        if (!epicIdStr.matches("\\d+")) {
+            sendInternalError(exchange, "Invalid epicId: %s".formatted(epicIdStr));
+            return;
+        }
+
+        int epicId = Integer.parseInt(epicIdStr);
+
+        taskManager.getEpic(epicId)
+                .orElseThrow(() -> new NoSuchElementException("Epic with ID " + epicId + " not found"));
+
+        taskManager.deleteEpic(epicId);
+        logger.info("Epic deleted successfully: ID " + epicId);
+
+        exchange.sendResponseHeaders(200, -1);
         exchange.close();
     }
+
 }
