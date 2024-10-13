@@ -21,7 +21,6 @@ public class PrioritizedTasksHandlerTest {
     public void setUp() {
         gson = GsonUtil.createGson();
         taskManager = new InMemoryTaskManager();
-        ((InMemoryTaskManager) taskManager).resetIdCounter();
     }
 
     @Test
