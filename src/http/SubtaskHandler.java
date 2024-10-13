@@ -9,8 +9,8 @@ import tasks.Subtask;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class SubtaskHandler extends BaseHttpHandler {
@@ -20,7 +20,7 @@ public class SubtaskHandler extends BaseHttpHandler {
 
     public SubtaskHandler(TaskManager taskManager, Gson gson) {
         this.taskManager = taskManager;
-        this.gson = GsonUtil.createGson(); // Используем кастомный Gson с адаптерами для Duration и LocalDateTime
+        this.gson = GsonUtil.createGson();
     }
 
     @Override
@@ -30,32 +30,22 @@ public class SubtaskHandler extends BaseHttpHandler {
 
         logger.info("Received request: " + method + " " + path);
 
-        try {
-            switch (method) {
-                case "GET" -> handleGet(exchange);
-                case "POST" -> handlePost(exchange);
-                case "DELETE" -> handleDelete(exchange, path);
-                default -> {
-                    logger.warning("Invalid method: " + method);
-                    sendNotFound(exchange);
-                }
+        switch (method) {
+            case "GET" -> handleGet(exchange);
+            case "POST" -> handlePost(exchange);
+            case "DELETE" -> handleDelete(exchange, path);
+            default -> {
+                logger.warning("Invalid method: " + method);
+                sendNotFound(exchange);
             }
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error processing request", e);
-            sendInternalError(exchange, "Internal server error: " + e.getMessage());
         }
     }
 
     private void handleGet(HttpExchange exchange) throws IOException {
-        try {
-            logger.info("Handling GET request for subtasks");
-            String response = gson.toJson(taskManager.getSubtasks());
-            sendText(exchange, response);
-            logger.info("Subtasks sent successfully.");
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error while handling GET request", e);
-            sendInternalError(exchange, e.getMessage());
-        }
+        logger.info("Handling GET request for subtasks");
+        String response = gson.toJson(taskManager.getSubtasks());
+        sendText(exchange, response);
+        logger.info("Subtasks sent successfully.");
     }
 
     private void handlePost(HttpExchange exchange) throws IOException {
@@ -65,29 +55,29 @@ public class SubtaskHandler extends BaseHttpHandler {
 
             logger.info("Subtask received: " + subtask);
 
-            // Проверка существования эпика, к которому принадлежит подзадача
-            Optional<Epic> epic = taskManager.getEpic(subtask.getSubtasksEpicId());
-            if (epic.isEmpty()) {
-                String errorMessage = "Epic with ID " + subtask.getSubtasksEpicId() + " not found";
+            Epic epic = taskManager.getEpic(subtask.getSubtasksEpicId())
+                    .orElseThrow(() -> new NoSuchElementException("Epic with ID " + subtask.getSubtasksEpicId() + " not found"));
+
+            if (taskManager.isOverlapping(subtask)) {
+                String errorMessage = "Subtask time conflicts with existing tasks.";
                 logger.warning(errorMessage);
-                sendInternalError(exchange, errorMessage);
+                exchange.sendResponseHeaders(406, -1);
                 return;
             }
 
-            // Добавление подзадачи
             taskManager.addSubtask(subtask);
-            exchange.sendResponseHeaders(201, -1); // Статус 201 Created
+            exchange.sendResponseHeaders(201, -1);
             logger.info("Subtask created successfully with ID: " + subtask.getId());
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error while handling POST request", e);
+        } catch (NoSuchElementException e) {
+            logger.warning(e.getMessage());
             sendInternalError(exchange, e.getMessage());
-        } finally {
-            exchange.close();
         }
     }
 
+
     private void handleDelete(HttpExchange exchange, String path) throws IOException {
         logger.info("Handling DELETE request for subtasks");
+
         if (path.startsWith("/subtasks/")) {
             String[] pathParts = path.split("/");
             if (pathParts.length == 3) {
@@ -95,18 +85,17 @@ public class SubtaskHandler extends BaseHttpHandler {
                     int subtaskId = Integer.parseInt(pathParts[2]);
                     logger.info("Attempting to delete subtask with ID: " + subtaskId);
 
-                    // Удаление подзадачи, если она существует
                     Optional<Subtask> subtask = taskManager.getSubtaskById(subtaskId);
                     if (subtask.isPresent()) {
                         taskManager.deleteSubtask(subtaskId);
-                        exchange.sendResponseHeaders(200, -1); // Статус 200 OK
+                        exchange.sendResponseHeaders(200, -1);
                         logger.info("Subtask deleted successfully: ID " + subtaskId);
                     } else {
                         logger.warning("Subtask with ID " + subtaskId + " not found");
                         sendNotFound(exchange);
                     }
                 } catch (NumberFormatException e) {
-                    logger.log(Level.WARNING, "Invalid subtask ID format", e);
+                    logger.warning("Invalid subtask ID format: " + pathParts[2]);
                     sendInternalError(exchange, "Invalid subtask ID format");
                 }
             } else {
@@ -117,6 +106,5 @@ public class SubtaskHandler extends BaseHttpHandler {
             logger.warning("Invalid DELETE request path: " + path);
             sendNotFound(exchange);
         }
-        exchange.close();
     }
 }
