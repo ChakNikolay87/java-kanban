@@ -49,12 +49,12 @@ public interface TaskManager {
 
     List<Subtask> getSubtasks();
 
-
+    
     List<Subtask> getSubtasksOfEpic(Epic epic);
 
     List<Task> getHistory();
 
     List<Task> getPrioritizedTasks();
-
+    
     boolean isOverlapping(Task newTask);
 }
