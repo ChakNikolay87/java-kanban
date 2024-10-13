@@ -32,11 +32,18 @@ public class PrioritizedTasksHandlerTest {
         taskManager.addTask(task2);
 
         List<Task> prioritizedTasks = taskManager.getPrioritizedTasks();
-        String json = gson.toJson(prioritizedTasks);
 
-        String expectedJson = "[{\"name\":\"Task 1\",\"description\":\"Description 1\",\"id\":1,\"status\":\"NEW\",\"duration\":\"PT1H\",\"startTime\":\"2024-10-11T10:00:00\"}," +
-                "{\"name\":\"Task 2\",\"description\":\"Description 2\",\"id\":2,\"status\":\"NEW\",\"duration\":\"PT1H30M\",\"startTime\":\"2024-10-11T12:00:00\"}]";
+        int task1Id = prioritizedTasks.get(0).getId();
+        int task2Id = prioritizedTasks.get(1).getId();
+
+        String expectedJson = String.format(
+                "[{\"name\":\"Task 1\",\"description\":\"Description 1\",\"id\":%d,\"status\":\"NEW\",\"duration\":\"PT1H\",\"startTime\":\"2024-10-11T10:00:00\"}," +
+                        "{\"name\":\"Task 2\",\"description\":\"Description 2\",\"id\":%d,\"status\":\"NEW\",\"duration\":\"PT1H30M\",\"startTime\":\"2024-10-11T12:00:00\"}]",
+                task1Id, task2Id);
+
+        String json = gson.toJson(prioritizedTasks);
 
         assertEquals(expectedJson, json);
     }
+
 }
