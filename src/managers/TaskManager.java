@@ -56,5 +56,5 @@ public interface TaskManager {
 
     List<Task> getPrioritizedTasks();
 
-    void resetIdCounter();
+    boolean isOverlapping(Task newTask);
 }
