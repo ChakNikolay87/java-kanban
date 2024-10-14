@@ -2,95 +2,132 @@ package http;
 
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
-import http.BaseHttpHandler;
-import http.GsonUtil;
 import managers.TaskManager;
 import tasks.Task;
-
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class TaskHandler extends BaseHttpHandler {
+    private static final Logger logger = Logger.getLogger(TaskHandler.class.getName());
     private final TaskManager taskManager;
     private final Gson gson;
 
     public TaskHandler(TaskManager taskManager, Gson gson) {
         this.taskManager = taskManager;
-        this.gson = GsonUtil.createGson(); // Используем кастомный Gson с адаптерами
+        this.gson = GsonUtil.createGson();
     }
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        try {
-            String method = exchange.getRequestMethod();
-            String path = exchange.getRequestURI().getPath();
+        String method = exchange.getRequestMethod();
+        String path = exchange.getRequestURI().getPath();
 
+        logger.info("Received request: " + method + " " + path);
+
+        try {
             switch (method) {
                 case "GET" -> handleGet(exchange, path);
                 case "POST" -> handlePost(exchange);
-                case "DELETE" -> handleDelete(exchange, path);
-                default -> sendNotFound(exchange);
+                case "DELETE" -> handleDeleteTask(exchange, path);
+                default -> {
+                    logger.warning("Unsupported method: " + method);
+                    sendNotFound(exchange);
+                }
             }
         } catch (Exception e) {
-            e.printStackTrace(); // Логируем полное сообщение об ошибке
+            logger.log(Level.SEVERE, "Error handling request", e);
             sendInternalError(exchange, "Internal server error: " + e.getMessage());
+        } finally {
+            exchange.close();
         }
     }
 
     private void handleGet(HttpExchange exchange, String path) throws IOException {
         if (path.equals("/tasks")) {
+            logger.info("Handling GET request for tasks");
             sendText(exchange, gson.toJson(taskManager.getTasks()));
+            logger.info("Tasks sent successfully.");
         } else {
             sendNotFound(exchange);
         }
     }
 
     private void handlePost(HttpExchange exchange) throws IOException {
-        InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8);
-        Task task;
-        try {
-            task = gson.fromJson(isr, Task.class);
+        logger.info("Handling POST request for creating task");
+        try (InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8)) {
+            Task task = gson.fromJson(isr, Task.class);
 
-            // Проверяем, что задача не null и имеет необходимые поля
             if (task == null || task.getName() == null || task.getDescription() == null) {
+                logger.warning("Invalid task format or missing required fields");
                 sendInternalError(exchange, "Invalid task format or missing required fields");
                 return;
             }
 
+            if (isOverlapping(task)) {
+                String errorMessage = "Task time conflicts with existing tasks.";
+                logger.warning(errorMessage);
+                exchange.sendResponseHeaders(406, -1);
+                return;
+            }
+
             taskManager.addTask(task);
-            exchange.sendResponseHeaders(201, -1); // Возвращаем статус 201 Created
+            logger.info("Task created successfully with ID: " + task.getId());
+            exchange.sendResponseHeaders(201, -1);
         } catch (Exception e) {
-            e.printStackTrace(); // Логируем ошибку
+            logger.log(Level.SEVERE, "Error while processing task creation", e);
             sendInternalError(exchange, "Error while processing task creation: " + e.getMessage());
-        } finally {
-            exchange.close();
         }
     }
 
-    private void handleDelete(HttpExchange exchange, String path) throws IOException {
-        if (path.startsWith("/tasks/")) {
-            String[] pathParts = path.split("/");
-            if (pathParts.length == 3) {
-                try {
-                    int taskId = Integer.parseInt(pathParts[2]);
-                    Optional<Task> task = taskManager.getTask(taskId);
-                    if (task.isPresent()) {
-                        taskManager.deleteTask(taskId);
-                        exchange.sendResponseHeaders(200, -1); // Успешное удаление
-                    } else {
-                        sendNotFound(exchange);
-                    }
-                } catch (NumberFormatException e) {
-                    sendInternalError(exchange, "Invalid task ID format");
-                }
-            } else {
-                sendNotFound(exchange);
-            }
-        } else {
+    private void handleDeleteTask(HttpExchange exchange, String path) throws IOException {
+        handleDelete(exchange, path,
+                taskManager::getTask,
+                taskManager::deleteTask);
+    }
+
+    private void handleDelete(HttpExchange exchange, String path,
+                              Function<Integer, Optional<?>> getTaskById,
+                              Consumer<Integer> deleteTask) throws IOException {
+        String[] pathParts = path.split("/");
+
+        if (pathParts.length != 3 || !pathParts[2].matches("\\d+")) {
+            logger.warning("Invalid task ID format or request path");
             sendNotFound(exchange);
+            return;
         }
-        exchange.close();
+
+        int taskId = Integer.parseInt(pathParts[2]);
+
+        try {
+            getTaskById.apply(taskId)
+                    .orElseThrow(() -> new NoSuchElementException("Task with ID " + taskId + " not found"));
+
+            deleteTask.accept(taskId);
+            logger.info("Task deleted successfully: ID " + taskId);
+            exchange.sendResponseHeaders(200, -1);
+        } catch (NoSuchElementException e) {
+            logger.warning(e.getMessage());
+            sendNotFound(exchange);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error deleting task", e);
+            sendInternalError(exchange, "Error deleting task: " + e.getMessage());
+        }
+    }
+
+    private boolean isOverlapping(Task newTask) {
+        return taskManager.getPrioritizedTasks().stream()
+                .anyMatch(existingTask ->
+                        existingTask.getStartTime() != null && existingTask.getEndTime() != null &&
+                                newTask.getStartTime() != null && newTask.getEndTime() != null &&
+                                !(existingTask.getEndTime().isBefore(newTask.getStartTime()) ||
+                                        existingTask.getStartTime().isAfter(newTask.getEndTime()))
+                );
     }
 }
