@@ -25,7 +25,7 @@ public class HistoryHandler implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        try {
+        try (exchange) {
             if ("GET".equalsIgnoreCase(exchange.getRequestMethod())) {
                 handleGet(exchange);
             } else {
@@ -35,8 +35,6 @@ public class HistoryHandler implements HttpHandler {
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error handling request", e);
             exchange.sendResponseHeaders(500, -1);
-        } finally {
-            exchange.close();
         }
     }
 
