@@ -11,6 +11,8 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.logging.Logger;
 
 public class SubtaskHandler extends BaseHttpHandler {
@@ -33,7 +35,7 @@ public class SubtaskHandler extends BaseHttpHandler {
         switch (method) {
             case "GET" -> handleGet(exchange);
             case "POST" -> handlePost(exchange);
-            case "DELETE" -> handleDelete(exchange, path);
+            case "DELETE" -> handleDeleteSubtask(exchange, path);
             default -> {
                 logger.warning("Invalid method: " + method);
                 sendNotFound(exchange);
@@ -74,37 +76,39 @@ public class SubtaskHandler extends BaseHttpHandler {
         }
     }
 
+    private void handleDeleteSubtask(HttpExchange exchange, String path) throws IOException {
+        handleDelete(exchange, path,
+                taskManager::getSubtaskById,
+                taskManager::deleteSubtask);
+    }
 
-    private void handleDelete(HttpExchange exchange, String path) throws IOException {
-        logger.info("Handling DELETE request for subtasks");
+    private void handleDelete(HttpExchange exchange, String path,
+                              Function<Integer, Optional<?>> getTaskById,
+                              Consumer<Integer> deleteTask) throws IOException {
+        String[] pathParts = path.split("/");
 
-        if (path.startsWith("/subtasks/")) {
-            String[] pathParts = path.split("/");
-            if (pathParts.length == 3) {
-                try {
-                    int subtaskId = Integer.parseInt(pathParts[2]);
-                    logger.info("Attempting to delete subtask with ID: " + subtaskId);
-
-                    Optional<Subtask> subtask = taskManager.getSubtaskById(subtaskId);
-                    if (subtask.isPresent()) {
-                        taskManager.deleteSubtask(subtaskId);
-                        exchange.sendResponseHeaders(200, -1);
-                        logger.info("Subtask deleted successfully: ID " + subtaskId);
-                    } else {
-                        logger.warning("Subtask with ID " + subtaskId + " not found");
-                        sendNotFound(exchange);
-                    }
-                } catch (NumberFormatException e) {
-                    logger.warning("Invalid subtask ID format: " + pathParts[2]);
-                    sendInternalError(exchange, "Invalid subtask ID format");
-                }
-            } else {
-                logger.warning("Invalid DELETE request format");
-                sendNotFound(exchange);
-            }
-        } else {
-            logger.warning("Invalid DELETE request path: " + path);
+        if (pathParts.length != 3 || !pathParts[2].matches("\\d+")) {
             sendNotFound(exchange);
+            return;
+        }
+
+        int taskId = Integer.parseInt(pathParts[2]);
+
+        try {
+            getTaskById.apply(taskId)
+                    .orElseThrow(() -> new NoSuchElementException("Task with ID " + taskId + " not found"));
+
+            deleteTask.accept(taskId);
+            logger.info("Task deleted successfully: ID " + taskId);
+            exchange.sendResponseHeaders(200, -1);
+        } catch (NoSuchElementException e) {
+            logger.warning(e.getMessage());
+            sendNotFound(exchange);
+        } catch (Exception e) {
+            logger.severe("Error deleting task: " + e.getMessage());
+            sendInternalError(exchange, e.getMessage());
+        } finally {
+            exchange.close();
         }
     }
 }
