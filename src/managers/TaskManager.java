@@ -56,6 +56,5 @@ public interface TaskManager {
 
     List<Task> getPrioritizedTasks();
 
-
     boolean isOverlapping(Task newTask);
 }
